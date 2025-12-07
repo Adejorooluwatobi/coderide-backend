@@ -17,6 +17,7 @@ export class User extends BaseEntity {
     profilePicture?: string;
     isActive: boolean;
     isVerified: boolean;
+    deletedAt?: Date;
 
     rider?: Rider;
     driver?: Driver;

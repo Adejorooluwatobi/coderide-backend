@@ -1,11 +1,14 @@
 import { VehicleCategory } from "../enums/vehicle-category.enum";
+import { VehicleOwnership } from "../enums/vehicle-ownership.enum";
 import { BaseEntity } from "./base.entity";
 import { Driver } from "./driver.entity";
 
 
+
 export class Vehicle extends BaseEntity {
-    driverId: string;
-    driver?: Driver;
+    ownershipType: VehicleOwnership;
+    owner: Driver;
+    ownerId?: string;
     licensePlate: string;
     make: string;
     model: string;

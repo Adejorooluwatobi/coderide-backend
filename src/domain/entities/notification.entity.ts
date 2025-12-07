@@ -10,6 +10,10 @@ export class Notification extends BaseEntity {
     type: NotificationType;
     isRead: boolean;
     metadata?: unknown; // JSON
+    actionUrl?: string;
+    imageUrl?: string;
+    expiresAt?: Date;
+    readAt?: Date;
 
     constructor(data: Partial<Notification>) {
         super();
