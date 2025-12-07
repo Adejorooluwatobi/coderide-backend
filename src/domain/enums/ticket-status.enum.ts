@@ -1,0 +1,8 @@
+export enum TicketStatus {
+    OPEN = 'OPEN',
+    IN_PROGRESS = 'IN_PROGRESS',
+    WAITING_FOR_USER = 'WAITING_FOR_USER',
+    WAITING_FOR_ADMIN = 'WAITING_FOR_ADMIN',
+    RESOLVED = 'RESOLVED',
+    CLOSED = 'CLOSED',
+}
