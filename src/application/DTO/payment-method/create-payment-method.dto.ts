@@ -9,30 +9,22 @@ import { PaymentMethodType } from 'src/domain/enums/payment.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePaymentMethodDto {
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
+  // userId extracted from JWT token - not in DTO
 
   @ApiProperty()
   @IsEnum(PaymentMethodType)
   @IsNotEmpty()
   type: PaymentMethodType;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   cardLast4?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   cardBrand?: string;
-
-  @ApiProperty()
-  @IsBoolean()
-  @IsNotEmpty()
-  isDefault: boolean;
 
   @ApiProperty()
   @IsString()

@@ -11,12 +11,10 @@ import { Priority } from 'src/domain/enums/priority.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateSupportTicketDto {
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
+  // userId extracted from JWT token - not in DTO
+  // User provides only: category, subject, description, and optional rideId
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   rideId?: string;
@@ -35,24 +33,4 @@ export class CreateSupportTicketDto {
   @IsString()
   @IsNotEmpty()
   description: string;
-
-  @ApiProperty()
-  @IsEnum(TicketStatus)
-  @IsNotEmpty()
-  status: TicketStatus;
-
-  @ApiProperty()
-  @IsEnum(Priority)
-  @IsNotEmpty()
-  priority: Priority;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  adminId?: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsDateString()
-  resolvedAt?: Date;
 }

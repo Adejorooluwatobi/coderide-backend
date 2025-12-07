@@ -6,22 +6,10 @@ import { CreateDriverDocumentDto } from '../application/DTO/driver-document/crea
 import { UpdateDriverDocumentDto } from '../application/DTO/driver-document/update-driver-document.dto';
 import { CreateDriverScheduleDto } from '../application/DTO/driver-schedule/create-driver-schedule.dto';
 import { UpdateDriverScheduleDto } from '../application/DTO/driver-schedule/update-driver-schedule.dto';
-
-
-export type CreateUserParams = CreateUserDto;
-export type UpdateUserParams = UpdateUserDto;
-export type CreateAdminParams = CreateAdminDto;
-export type UpdateAdminParams = UpdateAdminDto;
-export type CreateDriverDocumentParams = CreateDriverDocumentDto;
-export type UpdateDriverDocumentParams = UpdateDriverDocumentDto;
-export type CreateDriverScheduleParams = CreateDriverScheduleDto;
-export type UpdateDriverScheduleParams = UpdateDriverScheduleDto;
-export type CreateDriverParams = CreateDriverDto;
-export type UpdateDriverParams = UpdateDriverDto;
-
 import { CreateEarningDto } from '../application/DTO/earning/create-earning.dto';
 import { UpdateEarningDto } from '../application/DTO/earning/update-earning.dto';
-import { CreateDriverDto } from '../application/DTO/driver/create-driver.dto';
+import { CreateDriverApplicationDto } from '../application/DTO/driver/create-driver-application.dto';
+import { CreateCompanyDriverDto } from '../application/DTO/driver/create-company-driver.dto';
 import { UpdateDriverDto } from '../application/DTO/driver/update-driver.dto';
 import { CreateFareEstimateDto } from '../application/DTO/fare-estimate/create-fare-estimate.dto';
 import { UpdateFareEstimateDto } from '../application/DTO/fare-estimate/update-fare-estimate.dto';
@@ -56,39 +44,81 @@ import { UpdateVehicleAssignmentDto } from '../application/DTO/vehicle-assignmen
 import { CreateVehicleDto } from '../application/DTO/vehicle/create-vehicle.dto';
 import { UpdateVehicleDto } from '../application/DTO/vehicle/update-vehicle.dto';
 
+// ============================================
+// STANDARD PARAMS (No JWT modification needed)
+// ============================================
 
+export type CreateUserParams = CreateUserDto;
+export type UpdateUserParams = UpdateUserDto;
+
+export type CreateAdminParams = CreateAdminDto;
+export type UpdateAdminParams = UpdateAdminDto;
+
+export type CreateDriverDocumentParams = CreateDriverDocumentDto;
+export type UpdateDriverDocumentParams = UpdateDriverDocumentDto;
+
+export type CreateDriverScheduleParams = CreateDriverScheduleDto;
+export type UpdateDriverScheduleParams = UpdateDriverScheduleDto;
 
 export type CreateEarningParams = CreateEarningDto;
 export type UpdateEarningParams = UpdateEarningDto;
+
 export type CreateFareEstimateParams = CreateFareEstimateDto;
 export type UpdateFareEstimateParams = UpdateFareEstimateDto;
+
 export type CreateNotificationParams = CreateNotificationDto;
 export type UpdateNotificationParams = UpdateNotificationDto;
-export type CreatePaymentMethodParams = CreatePaymentMethodDto;
-export type UpdatePaymentMethodParams = UpdatePaymentMethodDto;
+
 export type CreatePaymentParams = CreatePaymentDto;
 export type UpdatePaymentParams = UpdatePaymentDto;
+
 export type CreatePromotionUsageParams = CreatePromotionUsageDto;
 export type UpdatePromotionUsageParams = UpdatePromotionUsageDto;
+
 export type CreatePromotionParams = CreatePromotionDto;
 export type UpdatePromotionParams = UpdatePromotionDto;
+
 export type CreateRatingParams = CreateRatingDto;
 export type UpdateRatingParams = UpdateRatingDto;
-export type CreateReferralParams = CreateReferralDto;
-export type UpdateReferralParams = UpdateReferralDto;
+
 export type CreateRideTrackingParams = CreateRideTrackingDto;
 export type UpdateRideTrackingParams = UpdateRideTrackingDto;
-export type CreateRideParams = CreateRideDto;
-export type UpdateRideParams = UpdateRideDto;
-export type CreateRiderParams = CreateRiderDto;
-export type UpdateRiderParams = UpdateRiderDto;
-export type CreateSupportTicketParams = CreateSupportTicketDto;
-export type UpdateSupportTicketParams = UpdateSupportTicketDto;
+
 export type CreateSurgeZoneParams = CreateSurgeZoneDto;
 export type UpdateSurgeZoneParams = UpdateSurgeZoneDto;
-export type CreateTicketMessageParams = CreateTicketMessageDto;
-export type UpdateTicketMessageParams = UpdateTicketMessageDto;
+
 export type CreateVehicleAssignmentParams = CreateVehicleAssignmentDto;
 export type UpdateVehicleAssignmentParams = UpdateVehicleAssignmentDto;
+
 export type CreateVehicleParams = CreateVehicleDto;
 export type UpdateVehicleParams = UpdateVehicleDto;
+
+// ============================================
+// JWT-BASED PARAMS (userId added from JWT token)
+// ============================================
+// These params ADD userId/riderId/senderId to the DTO
+// Controller extracts user ID from JWT token and passes to service
+// Pattern: Params = DTO + { userId: string }
+
+// DRIVER REGISTRATION (Two separate flows)
+export type CreateDriverApplicationParams = CreateDriverApplicationDto & { userId: string }; // Independent drivers (self-service)
+export type CreateCompanyDriverParams = CreateCompanyDriverDto; // Company drivers (admin creates, userId already in DTO)
+export type UpdateDriverParams = UpdateDriverDto; // Both driver types can update
+
+export type CreateRiderParams = CreateRiderDto & { userId: string };
+export type UpdateRiderParams = UpdateRiderDto;
+
+export type CreateRideParams = CreateRideDto & { riderId: string };
+export type UpdateRideParams = UpdateRideDto;
+
+export type CreatePaymentMethodParams = CreatePaymentMethodDto & { userId: string };
+export type UpdatePaymentMethodParams = UpdatePaymentMethodDto;
+
+export type CreateSupportTicketParams = CreateSupportTicketDto & { userId: string };
+export type UpdateSupportTicketParams = UpdateSupportTicketDto;
+
+export type CreateReferralParams = CreateReferralDto & { referredId: string };
+export type UpdateReferralParams = UpdateReferralDto;
+
+export type CreateTicketMessageParams = CreateTicketMessageDto & { senderId: string };
+export type UpdateTicketMessageParams = UpdateTicketMessageDto;
