@@ -6,15 +6,22 @@ import {
   IsDateString,
   IsArray,
   IsBoolean,
+  IsOptional,
 } from 'class-validator';
 import { VehicleCategory } from 'src/domain/enums/vehicle-category.enum';
+import { VehicleOwnership } from 'src/domain/enums/vehicle-ownership.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateVehicleDto {
-  @ApiProperty()
-  @IsString()
+  @ApiProperty({ enum: VehicleOwnership })
+  @IsEnum(VehicleOwnership)
   @IsNotEmpty()
-  driverId: string;
+  ownershipType: VehicleOwnership;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  ownerId?: string;
 
   @ApiProperty()
   @IsString()
