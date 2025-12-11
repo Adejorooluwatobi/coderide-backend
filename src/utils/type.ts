@@ -48,7 +48,7 @@ import { UpdateVehicleDto } from '../application/DTO/vehicle/update-vehicle.dto'
 // STANDARD PARAMS (No JWT modification needed)
 // ============================================
 
-export type CreateUserParams = CreateUserDto;
+export type CreateUserParams = CreateUserDto & { isActive?: boolean; isVerified?: boolean };
 export type UpdateUserParams = UpdateUserDto;
 
 export type CreateAdminParams = CreateAdminDto;

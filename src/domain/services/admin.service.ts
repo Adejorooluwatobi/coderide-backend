@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Admin } from '../entities/admin.entity';
 import type { IAdminRepository } from '../repositories/admin.repository.interface';
 import { CreateAdminParams, UpdateAdminParams } from 'src/utils/type';
+import * as bcrypt from 'bcrypt'; // Added bcrypt import
 
 @Injectable()
 export class AdminService {
@@ -37,6 +38,15 @@ export class AdminService {
       this.logger.error('Username and password are required');
       throw new Error('Username and password are required');
     }
+    const existingAdmin = await this.adminRepository.findByUsername(admin.username);
+    if (existingAdmin) {
+      this.logger.error(`Admin with username ${admin.username} already exists`);
+      throw new Error('Admin with this username already exists');
+    }
+    if (admin.password) {
+      admin.password = await bcrypt.hash(admin.password, 10);
+    }
+    this.logger.log(`Creating admin with username: ${admin.username}`);
     return this.adminRepository.create(admin);
   }
 

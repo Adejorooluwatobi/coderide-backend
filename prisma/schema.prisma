@@ -19,7 +19,7 @@ model User {
   firstName       String
   lastName        String
   profilePicture  String?
-  userType        Int
+  userType        UserType
   isActive        Boolean       @default(true)
   isVerified      Boolean       @default(false)
   deletedAt       DateTime?
@@ -567,4 +567,9 @@ enum Priority {
   MEDIUM
   HIGH
   URGENT
+}
+
+enum UserType {
+  RIDER
+  DRIVER
 }
