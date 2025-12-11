@@ -4,11 +4,16 @@ import { User } from '../../../../domain/entities/user.entity';
 import { CreateUserParams, UpdateUserParams } from '../../../../utils/type';
 import { PrismaService } from '../prisma.service';
 import { UserMapper } from '../../../mappers/user.mapper';
-import { Prisma } from '@prisma/client';
+import { UserType as PrismaUserType } from '@prisma/client';
+import { UserType } from '../../../../domain/enums/user-type.enum';
 
 @Injectable()
 export class PrismaUserRepository implements IUserRepository {
   constructor(private prisma: PrismaService) {}
+
+  private mapUserTypeToPrisma(userType: UserType): PrismaUserType {
+    return userType === UserType.RIDER ? 'RIDER' : 'DRIVER';
+  }
 
   async findById(id: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({ where: { id } });
@@ -26,12 +31,25 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   async create(params: CreateUserParams): Promise<User> {
-    const user = await this.prisma.user.create({ data: params as Prisma.UserUncheckedCreateInput });
+    const { userType, ...rest } = params;
+    const user = await this.prisma.user.create({ 
+      data: { 
+        ...rest, 
+        userType: this.mapUserTypeToPrisma(userType) 
+      } 
+    });
     return UserMapper.toDomain(user);
   }
 
   async update(id: string, params: Partial<UpdateUserParams>): Promise<User> {
-    const user = await this.prisma.user.update({ where: { id }, data: params as Prisma.UserUpdateInput });
+    const { userType, ...rest } = params;
+    const user = await this.prisma.user.update({ 
+      where: { id }, 
+      data: { 
+        ...rest, 
+        ...(userType && { userType: this.mapUserTypeToPrisma(userType) }) 
+      } 
+    });
     return UserMapper.toDomain(user);
   }
 

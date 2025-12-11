@@ -3,7 +3,6 @@ import {
   IsEmail,
   IsNotEmpty,
   IsOptional,
-  IsBoolean,
   IsEnum,
 } from 'class-validator';
 import { UserType } from 'src/domain/enums/user-type.enum';
@@ -45,14 +44,4 @@ export class CreateUserDto {
   @ApiProperty()
   @IsString()
   profilePicture?: string;
-
-  @ApiProperty()
-  @IsBoolean()
-  @IsNotEmpty()
-  isActive: boolean;
-
-  @ApiProperty()
-  @IsBoolean()
-  @IsNotEmpty()
-  isVerified: boolean;
 }

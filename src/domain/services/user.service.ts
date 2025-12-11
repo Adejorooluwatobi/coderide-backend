@@ -1,6 +1,7 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { User } from '../entities/user.entity';
 import type { IUserRepository } from '../repositories/user.repository.interface';
+import * as bcrypt from 'bcrypt'; // Added bcrypt import
 
 @Injectable()
 export class UserService {
@@ -38,12 +39,19 @@ export class UserService {
     return user;
   }
 
- 
-
+  // ALL BUSINESS LOGIC (EMAIL CHECK, HASHING, EXISTENCE) MOVED HERE
   async create(userData: Partial<User>): Promise<User> {
     if (!userData.email || !this.isValidEmail(userData.email)) {
       this.logger.error(`Invalid email provided: ${userData.email}`);
-      throw new Error('Invalid email format');
+      throw new BadRequestException('Invalid email format'); // THROW NESTJS EXCEPTION
+    }
+    const existingUser = await this.userRepository.findByEmail(userData.email);
+    if (existingUser) {
+        throw new ConflictException('User with this email already exists'); // THROW CONFLICT
+    }   
+    // HASHING LOGIC MOVED FROM CONTROLLER TO SERVICE
+    if (userData.password) {
+        userData.password = await bcrypt.hash(userData.password, 10);
     }
     const newUser = await this.userRepository.create(userData as User);
     this.logger.log(`User created with id: ${newUser.id}`);
@@ -55,8 +63,11 @@ export class UserService {
     if
   (!existingUser) {
       this.logger.error(`Cannot update, user not found with id: ${id}`);
-      throw new Error('User not found');
+      // THROW NESTJS EXCEPTION
+      throw new NotFoundException('User not found'); 
     }
+    // If you were updating the password, hashing would also happen here.
+    
     const updatedUser = await this.userRepository.update(id, userData as User);
     this.logger.log(`User updated with id: ${updatedUser.id}`);
     return updatedUser;
@@ -66,7 +77,8 @@ export class UserService {
     const existingUser = await this.userRepository.findById(id);  
     if (!existingUser) {
       this.logger.error(`Cannot delete, user not found with id: ${id}`);
-      throw new Error('User not found');
+      // THROW NESTJS EXCEPTION
+      throw new NotFoundException('User not found'); 
     }
     await this.userRepository.delete(id);
     this.logger.log(`User deleted with id: ${id}`);
