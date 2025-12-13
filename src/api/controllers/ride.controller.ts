@@ -3,6 +3,7 @@ import { RideService } from '../../domain/services/ride.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { CreateRideDto } from 'src/application/DTO/ride/create-ride.dto';
 import { UpdateRideDto } from 'src/application/DTO/ride/update-ride.dto';
+import { Ride } from 'src/domain/entities/ride.entity';
 
 @Controller('ride')
 export class RideController {
@@ -49,7 +50,7 @@ export class RideController {
   @Post()
   @ApiOperation({ summary: 'Create ride' })
   async createRide(@Body(new ValidationPipe()) rideData: CreateRideDto) {
-    const ride = await this.rideService.create(rideData as any);
+    const ride = await this.rideService.create(rideData as Ride);
     return { succeeded: true, message: 'Ride created successfully', resultData: ride };
   }
 

@@ -70,3 +70,14 @@ export class SecureAdminResponseDto {
   @IsDateString()
   updatedAt: Date;
 }
+
+export class ApiResponseDto<T> {
+  @IsBoolean()
+  succeeded: boolean;
+
+  @IsString()
+  message: string;
+
+  @IsOptional()
+  data?: T;
+}

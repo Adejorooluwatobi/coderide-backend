@@ -1,4 +1,4 @@
 export enum UserType {
-  RIDER = 1,
-  DRIVER = 2,
+  RIDER = 'RIDER',
+  DRIVER = 'DRIVER',
 }

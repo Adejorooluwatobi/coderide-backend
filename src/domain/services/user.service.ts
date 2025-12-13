@@ -21,9 +21,15 @@ export class UserService {
   }
 
    async findAll(): Promise<User[]> {
-    const users = await this.userRepository.findAll();
-    this.logger.log(`Found ${users.length} users`);
-    return users;
+    try {
+      this.logger.log('Attempting to fetch all users');
+      const users = await this.userRepository.findAll();
+      this.logger.log(`Found ${users.length} users`);
+      return users;
+    } catch (error) {
+      this.logger.error('Error in findAll:', error);
+      throw error;
+    }
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -60,8 +66,7 @@ export class UserService {
 
   async update(id: string, userData: Partial<User>): Promise<User> {
     const existingUser = await this.userRepository.findById(id);
-    if
-  (!existingUser) {
+    if (!existingUser) {
       this.logger.error(`Cannot update, user not found with id: ${id}`);
       // THROW NESTJS EXCEPTION
       throw new NotFoundException('User not found'); 

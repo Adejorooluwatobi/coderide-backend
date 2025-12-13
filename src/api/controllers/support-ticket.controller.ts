@@ -3,6 +3,7 @@ import { SupportTicketService } from '../../domain/services/support-ticket.servi
 import { ApiOperation } from '@nestjs/swagger';
 import { CreateSupportTicketDto } from 'src/application/DTO/support-ticket/create-support-ticket.dto';
 import { UpdateSupportTicketDto } from 'src/application/DTO/support-ticket/update-support-ticket.dto';
+import { SupportTicket } from 'src/domain/entities/support-ticket.entity';
 
 @Controller('support-ticket')
 export class SupportTicketController {
@@ -40,7 +41,7 @@ export class SupportTicketController {
   @Post()
   @ApiOperation({ summary: 'Create support ticket' })
   async create(@Body(new ValidationPipe()) data: CreateSupportTicketDto) {
-    const ticket = await this.supportTicketService.create(data as any);
+    const ticket = await this.supportTicketService.create(data as SupportTicket);
     return { succeeded: true, message: 'Support ticket created successfully', resultData: ticket };
   }
 

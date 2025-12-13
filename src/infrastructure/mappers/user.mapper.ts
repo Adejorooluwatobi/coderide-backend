@@ -4,11 +4,7 @@ import { UserType } from 'src/domain/enums/user-type.enum';
 
 export class UserMapper {
   private static mapUserTypeToDomain(prismaUserType: PrismaUserType): UserType {
-    return prismaUserType === 'RIDER' ? UserType.RIDER : UserType.DRIVER;
-  }
-
-  private static mapUserTypeToPrisma(userType: UserType): PrismaUserType {
-    return userType === UserType.RIDER ? 'RIDER' : 'DRIVER';
+    return prismaUserType as UserType;
   }
 
   static toDomain(prismaUser: PrismaUser): User {
@@ -20,7 +16,7 @@ export class UserMapper {
       firstName: prismaUser.firstName,
       lastName: prismaUser.lastName,
       profilePicture: prismaUser.profilePicture ?? undefined,
-      userType: this.mapUserTypeToDomain(prismaUser.userType),
+      userType: prismaUser.userType as UserType,
       isActive: prismaUser.isActive,
       isVerified: prismaUser.isVerified,
       deletedAt: prismaUser.deletedAt ?? undefined,
@@ -38,7 +34,7 @@ export class UserMapper {
       firstName: user.firstName,
       lastName: user.lastName,
       profilePicture: user.profilePicture ?? null,
-      userType: this.mapUserTypeToPrisma(user.userType),
+      userType: user.userType as UserType,
       isActive: user.isActive,
       isVerified: user.isVerified,
       deletedAt: user.deletedAt ?? null,
