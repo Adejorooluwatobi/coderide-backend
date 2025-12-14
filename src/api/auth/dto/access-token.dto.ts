@@ -11,12 +11,6 @@ export class AdminAccessTokenDto {
     isActive: boolean;
     displayName: string;
     role: string; // Assuming role is a string, adjust as necessary
+    permissions: number;
   }
 
-
-export class VendorAccessTokenDto {
-    accessToken: string;
-    isActive: boolean;
-    displayName: string;
-    role: string; // Assuming role is a string, adjust as necessary
-  }

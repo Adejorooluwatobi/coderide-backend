@@ -13,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: { sub: string; email: string; role: string }) {
+  async validate(payload: { sub: string; email: string; role: string; username: string}) {
     const userData = { 
       id: payload.sub, 
       email: payload.email,
@@ -21,10 +21,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     };
     const adminData = { 
       id: payload.sub, 
-      email: payload.email,
+      email: payload.username,
       role: payload.role 
     };
-
     if (payload.role === 'user') {
       return { user: userData };
     } else if (payload.role === 'admin') {
