@@ -3,9 +3,11 @@ import { RideController } from '../controllers/ride.controller';
 import { RideService } from '../../domain/services/ride.service';
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
 import { PrismaRideRepository } from 'src/infrastructure/persistence/prisma/repositories/prisma.ride.repository';
+import { RiderModule } from './rider.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, RiderModule, JwtModule],
   controllers: [RideController],
   providers: [
     RideService,

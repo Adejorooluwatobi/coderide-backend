@@ -1,13 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException, UseGuards } from '@nestjs/common';
 import { RideService } from '../../domain/services/ride.service';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateRideDto } from 'src/application/DTO/ride/create-ride.dto';
 import { UpdateRideDto } from 'src/application/DTO/ride/update-ride.dto';
 import { Ride } from 'src/domain/entities/ride.entity';
+import { UserGuard } from '../auth/guards';
+import { User } from 'src/shared/common/decorators/user.decorator';
+import { RiderService } from 'src/domain/services/rider.service';
 
 @Controller('ride')
 export class RideController {
-  constructor(private readonly rideService: RideService) {}
+  constructor(
+    private readonly rideService: RideService,
+    private readonly riderService: RiderService,
+  ) {}
 
   @Get(':id')
   @ApiOperation({ summary: 'Get ride by ID' })
@@ -48,9 +54,15 @@ export class RideController {
   }
 
   @Post()
+  @UseGuards(UserGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create ride' })
-  async createRide(@Body(new ValidationPipe()) rideData: CreateRideDto) {
-    const ride = await this.rideService.create(rideData as Ride);
+  async createRide(@Body(new ValidationPipe()) rideData: CreateRideDto, @User() user: any) {
+    const rider = await this.riderService.findByUserId(user.sub);
+    if (!rider) {
+      throw new NotFoundException(`Rider for user ${user.sub} not found`);
+    }
+    const ride = await this.rideService.create({ ...rideData, riderId: rider.id } as Ride);
     return { succeeded: true, message: 'Ride created successfully', resultData: ride };
   }
 

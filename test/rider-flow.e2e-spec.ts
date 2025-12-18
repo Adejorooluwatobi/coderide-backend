@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import { ValidationPipe } from '@nestjs/common';
+import request from 'supertest';
 import { AppModule } from './../src/app.module';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 describe('Complete Rider Flow (e2e)', () => {
-  let app: INestApplication;
+  let app: NestFastifyApplication;
   let userId: string;
   let riderId: string;
   let rideId: string;
@@ -14,7 +15,9 @@ describe('Complete Rider Flow (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
+    app.setGlobalPrefix('api');
+    app.useGlobalPipes(new ValidationPipe());
     await app.init();
   });
 
