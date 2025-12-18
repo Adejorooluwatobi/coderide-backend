@@ -1,9 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { TestAppModule } from './test-app.module';
 import { CreateCompanyDriverDto } from 'src/application/DTO/driver/create-company-driver.dto';
-import { DocumentStatus } from 'src/domain/enums/document-status.enum';
 import request from 'supertest';
 
 describe('DriverController (e2e)', () => {
@@ -15,13 +14,14 @@ describe('DriverController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [TestAppModule];
+      imports: [TestAppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user to be associated with the driver
     const userEmail = `driver_user_${Date.now()}@example.com`;

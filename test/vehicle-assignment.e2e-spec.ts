@@ -3,6 +3,8 @@ import { ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { VehicleCategory } from 'src/domain/enums/vehicle-category.enum';
+import { VehicleOwnership } from 'src/domain/enums/vehicle-ownership.enum';
 
 describe('VehicleAssignmentController (e2e)', () => {
   let app: NestFastifyApplication;
@@ -20,42 +22,80 @@ describe('VehicleAssignmentController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a driver
+    const driverEmail = `assign_driver_${Date.now()}@example.com`;
     const driverUserRes = await request(app.getHttpServer()).post('/api/user').send({
-      email: `assign_driver_${Date.now()}@example.com`,
+      email: driverEmail,
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
       password: 'Password123!',
+      firstName: 'Assign',
+      lastName: 'Driver',
+      userType: 'DRIVER',
     });
+    expect(driverUserRes.statusCode).toBe(201);
     const driverUserId = driverUserRes.body.resultData.id;
     const driverRes = await request(app.getHttpServer()).post('/api/driver/company').send({
       userId: driverUserId,
       licenseNumber: `ASSIGN-LIC-${Date.now()}`,
+      licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
     });
+    expect(driverRes.statusCode).toBe(201);
     driverId = driverRes.body.resultData.id;
 
     // Create another driver for failure case test
     const anotherDriverUserRes = await request(app.getHttpServer()).post('/api/user').send({
       email: `assign_driver2_${Date.now()}@example.com`,
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
       password: 'Password123!',
+      firstName: 'Assign2',
+      lastName: 'Driver',
+      userType: 'DRIVER',
     });
+    expect(anotherDriverUserRes.statusCode).toBe(201);
     const anotherDriverUserId = anotherDriverUserRes.body.resultData.id;
     const anotherDriverRes = await request(app.getHttpServer()).post('/api/driver/company').send({
       userId: anotherDriverUserId,
       licenseNumber: `ASSIGN-LIC2-${Date.now()}`,
+      licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
     });
+    expect(anotherDriverRes.statusCode).toBe(201);
     anotherDriverId = anotherDriverRes.body.resultData.id;
 
     // Create a vehicle
     const vehicleOwnerRes = await request(app.getHttpServer()).post('/api/user').send({
       email: `assign_owner_${Date.now()}@example.com`,
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
       password: 'Password123!',
+      firstName: 'Assign',
+      lastName: 'Owner',
+      userType: 'DRIVER',
     });
-    const ownerId = vehicleOwnerRes.body.resultData.id;
+    expect(vehicleOwnerRes.statusCode).toBe(201);
+    const ownerUserId = vehicleOwnerRes.body.resultData.id;
+    const ownerDriverRes = await request(app.getHttpServer()).post('/api/driver/company').send({
+      userId: ownerUserId,
+      licenseNumber: `OWNER-LIC-${Date.now()}`,
+      licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    });
+    expect(ownerDriverRes.statusCode).toBe(201);
+    const ownerId = ownerDriverRes.body.resultData.id;
     const vehicleRes = await request(app.getHttpServer()).post('/api/vehicle').send({
       ownerId,
-      plateNumber: `ASSIGN-${Date.now()}`,
+      licensePlate: `ASSIGN-${Date.now()}`,
       model: 'Test',
+      make: 'Testla',
+      year: 2023,
+      color: 'Black',
+      category: VehicleCategory.ECONOMY,
+      ownershipType: VehicleOwnership.COMPANY_OWNED,
+      seats: 4,
+      insuranceExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      vehiclePhotos: ['https://example.com/photo.jpg'],
+      isActive: true,
     });
+    expect(vehicleRes.statusCode).toBe(201);
     vehicleId = vehicleRes.body.resultData.id;
   });
 

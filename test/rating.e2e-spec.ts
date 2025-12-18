@@ -11,6 +11,7 @@ describe('RatingController (e2e)', () => {
   let driverId: string;
   let rideId: string;
   let ratingId: string;
+  let authToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -21,28 +22,50 @@ describe('RatingController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create Rider User and Rider Profile
+    const riderEmail = `rating_rider_${Date.now()}@example.com`;
     const riderUserRes = await request(app.getHttpServer()).post('/api/user').send({
-      email: `rating_rider_${Date.now()}@example.com`,
+      email: riderEmail,
       password: 'Password123!',
+      firstName: 'Rider',
+      lastName: 'User',
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
       userType: UserType.RIDER,
     });
     const riderUserId = riderUserRes.body.resultData.id;
-    const riderRes = await request(app.getHttpServer()).post('/api/rider').send({ userId: riderUserId });
+
+    // Login Rider User
+    const loginRes = await request(app.getHttpServer()).post('/api/auth/user/login').send({
+      email: riderEmail,
+      password: 'Password123!',
+    });
+    authToken = loginRes.body.accessToken;
+
+    const riderRes = await request(app.getHttpServer())
+      .post('/api/rider')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ userId: riderUserId });
     riderId = riderRes.body.resultData.id;
 
     // Create Driver User and Driver Profile
+    const driverEmail = `rating_driver_${Date.now()}@example.com`;
     const driverUserRes = await request(app.getHttpServer()).post('/api/user').send({
-      email: `rating_driver_${Date.now()}@example.com`,
+      email: driverEmail,
       password: 'Password123!',
+      firstName: 'Driver',
+      lastName: 'User',
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
       userType: UserType.DRIVER,
     });
     const driverUserId = driverUserRes.body.resultData.id;
     const driverRes = await request(app.getHttpServer()).post('/api/driver/company').send({
       userId: driverUserId,
       licenseNumber: `RATE-LIC-${Date.now()}`,
+      licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
     });
+    expect(driverRes.statusCode).toBe(201);
     driverId = driverRes.body.resultData.id;
 
     // Create a Ride

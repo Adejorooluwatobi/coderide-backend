@@ -20,19 +20,30 @@ describe('ReferralController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create the referrer user
     const referrerRes = await request(app.getHttpServer()).post('/api/user').send({
       email: `referrer_${Date.now()}@example.com`,
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
       password: 'Password123!',
+      firstName: 'Referrer',
+      lastName: 'User',
+      userType: 'RIDER',
     });
+    expect(referrerRes.statusCode).toBe(201);
     referrerId = referrerRes.body.resultData.id;
 
     // Create the referred user
     const referredRes = await request(app.getHttpServer()).post('/api/user').send({
       email: `referred_${Date.now()}@example.com`,
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
       password: 'Password123!',
+      firstName: 'Referred',
+      lastName: 'User',
+      userType: 'RIDER',
     });
+    expect(referredRes.statusCode).toBe(201);
     referredId = referredRes.body.resultData.id;
   });
 

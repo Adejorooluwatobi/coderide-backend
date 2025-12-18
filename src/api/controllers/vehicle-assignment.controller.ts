@@ -67,6 +67,13 @@ export class VehicleAssignmentController {
     return { succeeded: true, message: 'Vehicle assignment updated successfully', resultData: assignment };
   }
 
+  @Put(':id/end')
+  @ApiOperation({ summary: 'End vehicle assignment' })
+  async endAssignment(@Param('id') id: string, @Body() body: { returnDate: Date }) {
+    const assignment = await this.vehicleAssignmentService.endAssignment(id, body.returnDate);
+    return { succeeded: true, message: 'Vehicle assignment ended successfully', resultData: assignment };
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete vehicle assignment' })
   async delete(@Param('id') id: string) {

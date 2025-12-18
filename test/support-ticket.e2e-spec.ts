@@ -19,12 +19,18 @@ describe('SupportTicket & TicketMessage Controllers (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user for the tests
     const userRes = await request(app.getHttpServer()).post('/api/user').send({
       email: `support_user_${Date.now()}@example.com`,
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
       password: 'Password123!',
+      firstName: 'Support',
+      lastName: 'User',
+      userType: 'RIDER',
     });
+    expect(userRes.statusCode).toBe(201);
     userId = userRes.body.resultData.id;
   });
 

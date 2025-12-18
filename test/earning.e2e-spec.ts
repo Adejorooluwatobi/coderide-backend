@@ -23,6 +23,7 @@ describe('EarningController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user and driver for the tests
     const driverUserEmail = `earning_driver_${Date.now()}@example.com`;

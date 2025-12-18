@@ -8,6 +8,7 @@ describe('RideTrackingController (e2e)', () => {
   let app: NestFastifyApplication;
   let rideId: string;
   let trackingRecordId: string;
+  let authToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -18,14 +19,33 @@ describe('RideTrackingController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user and rider
+    const email = `tracking_user_${Date.now()}@example.com`;
     const userRes = await request(app.getHttpServer()).post('/api/user').send({
-      email: `tracking_user_${Date.now()}@example.com`,
+      email,
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
+      password: 'Password123!',
+      firstName: 'Tracking',
+      lastName: 'User',
+      userType: 'RIDER',
+    });
+    expect(userRes.statusCode).toBe(201);
+    const userId = userRes.body.resultData.id;
+
+    // Login
+    const loginRes = await request(app.getHttpServer()).post('/api/auth/user/login').send({
+      email,
       password: 'Password123!',
     });
-    const userId = userRes.body.resultData.id;
-    const riderRes = await request(app.getHttpServer()).post('/api/rider').send({ userId });
+    authToken = loginRes.body.accessToken;
+
+    const riderRes = await request(app.getHttpServer())
+      .post('/api/rider')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ userId });
+    expect(riderRes.statusCode).toBe(201);
     const riderId = riderRes.body.resultData.id;
 
     // Create a ride to track

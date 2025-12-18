@@ -19,6 +19,7 @@ describe('RiderController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user and get auth token for authenticated endpoints
     const userEmail = `rider_user_${Date.now()}@example.com`;
@@ -55,9 +56,8 @@ describe('RiderController (e2e)', () => {
   describe('/api/rider', () => {
     it('should create a new rider profile', async () => {
       const riderData = {
-        emergencyContactName: 'Emergency Contact',
-        emergencyContactPhone: '08123456789',
-        preferredPaymentMethod: 'CARD',
+        userId: createdUserId,
+        preferredLanguage: 'en',
       };
 
       const response = await request(app.getHttpServer())
@@ -69,7 +69,6 @@ describe('RiderController (e2e)', () => {
       expect(response.body.succeeded).toBe(true);
       expect(response.body.resultData).toHaveProperty('id');
       expect(response.body.resultData.userId).toBe(createdUserId);
-      expect(response.body.resultData.emergencyContactName).toBe('Emergency Contact');
       createdRiderId = response.body.resultData.id;
     });
 
@@ -117,20 +116,15 @@ describe('RiderController (e2e)', () => {
 
     it('should update a rider', async () => {
       const updateData = {
-        emergencyContactName: 'Updated Emergency Contact',
-        emergencyContactPhone: '08987654321',
-        preferredPaymentMethod: 'CASH',
+        preferredLanguage: 'fr',
       };
 
       const response = await request(app.getHttpServer())
         .put(`/api/rider/${createdRiderId}`)
         .send(updateData)
         .expect(200);
-
       expect(response.body.succeeded).toBe(true);
-      expect(response.body.resultData.emergencyContactName).toBe('Updated Emergency Contact');
-      expect(response.body.resultData.emergencyContactPhone).toBe('08987654321');
-      expect(response.body.resultData.preferredPaymentMethod).toBe('CASH');
+      expect(response.body.resultData.preferredLanguage).toBe('fr');
     });
 
     it('should delete a rider', async () => {

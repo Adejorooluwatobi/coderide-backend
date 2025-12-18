@@ -22,6 +22,7 @@ describe('NotificationController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user for the tests
     const userEmail = `notif_user_${Date.now()}@example.com`;
@@ -50,7 +51,7 @@ describe('NotificationController (e2e)', () => {
         userId: createdUserId,
         title: 'Test Notification',
         message: 'This is a test notification.',
-        type: NotificationType.RIDE_UPDATE,
+        type: NotificationType.RIDE_REQUEST,
         isRead: false,
       };
 

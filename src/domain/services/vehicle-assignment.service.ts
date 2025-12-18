@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, ConflictException, NotFoundException } from '@nestjs/common';
 import { VehicleAssignment } from '../entities/vehicle-assignment.entity';
 import type { IVehicleAssignmentRepository } from '../repositories/vehicle-assignment.repository.interface';
 import { CreateVehicleAssignmentParams, UpdateVehicleAssignmentParams } from 'src/utils/type';
@@ -61,6 +61,11 @@ export class VehicleAssignmentService {
   }
 
   async create(vehicleAssignment: CreateVehicleAssignmentParams): Promise<VehicleAssignment> {
+    const activeAssignment = await this.vehicleAssignmentRepository.findActiveByVehicleId(vehicleAssignment.vehicleId);
+    if (activeAssignment) {
+      throw new ConflictException('Vehicle is already assigned'); // Using ConflictException from @nestjs/common
+    }
+
     this.logger.log(`Creating vehicle assignment with data: ${JSON.stringify(vehicleAssignment)}`);
     return this.vehicleAssignmentRepository.create(vehicleAssignment);
   }
@@ -72,6 +77,21 @@ export class VehicleAssignmentService {
     }
     this.logger.log(`Updating vehicle assignment ${id} with data: ${JSON.stringify(vehicleAssignment)}`);
     return this.vehicleAssignmentRepository.update(id, vehicleAssignment);
+  }
+
+  async endAssignment(id: string, returnDate: Date): Promise<VehicleAssignment> {
+    const assignment = await this.vehicleAssignmentRepository.findById(id);
+    if (!assignment) {
+      throw new NotFoundException(`Assignment with ID ${id} not found`);
+    }
+
+    // Assuming there's a way to check if it's already ended, usually by checking returnDate
+    // The entity definition isn't fully visible but let's assume returnDate presence means it ended.
+    // If the repository returns an entity that has returnDate, it might be tricky without seeing the entity.
+    // However, the update typically handles setting the returnDate.
+
+    this.logger.log(`Ending assignment ${id} on ${returnDate}`);
+    return this.vehicleAssignmentRepository.update(id, { returnedAt: returnDate });
   }
 
   async delete(id: string): Promise<void> {

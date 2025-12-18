@@ -28,8 +28,13 @@ export class UserGuard implements CanActivate {
       // Assign user to request object
       request.user = payload;
       // Allow access if user is RIDER or DRIVER
-      return payload.role === 'RIDER' || payload.role === 'DRIVER';
-    } catch {
+      const isAllowed = payload.role === 'RIDER' || payload.role === 'DRIVER';
+      if (!isAllowed) {
+        console.log(`UserGuard: Access denied for role ${payload.role}`);
+      }
+      return isAllowed;
+    } catch (err) {
+      console.log(`UserGuard: Verification failed: ${err.message}`);
       return false;
     }
   }

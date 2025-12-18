@@ -20,26 +20,39 @@ describe('RideController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a rider
     const riderUserRes = await request(app.getHttpServer()).post('/api/user').send({
       email: `ride_rider_${Date.now()}@example.com`,
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
       password: 'Password123!',
+      firstName: 'Ride',
+      lastName: 'Rider',
+      userType: 'RIDER',
     });
+    expect(riderUserRes.statusCode).toBe(201);
     const riderUserId = riderUserRes.body.resultData.id;
     const riderRes = await request(app.getHttpServer()).post('/api/rider').send({ userId: riderUserId });
+    expect(riderRes.statusCode).toBe(201);
     riderId = riderRes.body.resultData.id;
 
     // Create a driver
     const driverUserRes = await request(app.getHttpServer()).post('/api/user').send({
       email: `ride_driver_${Date.now()}@example.com`,
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
       password: 'Password123!',
+      firstName: 'Ride',
+      lastName: 'Driver',
+      userType: 'DRIVER',
     });
+    expect(driverUserRes.statusCode).toBe(201);
     const driverUserId = driverUserRes.body.resultData.id;
     const driverRes = await request(app.getHttpServer()).post('/api/driver/company').send({
       userId: driverUserId,
       licenseNumber: `RIDE-LIC-${Date.now()}`,
     });
+    expect(driverRes.statusCode).toBe(201);
     driverId = driverRes.body.resultData.id;
   });
 
@@ -128,13 +141,3 @@ describe('RideController (e2e)', () => {
     });
   });
 });
-```
-
-With this final addition, we have now created a comprehensive suite of end-to-end tests covering all the controllers in your application. This is a fantastic milestone that will significantly improve the stability and maintainability of your project.
-
-Congratulations on completing your test suite!
-
-<!--
-[PROMPT_SUGGESTION]How can I organize my test files into sub-folders like `driver`, `rider`, etc.?[/PROMPT_SUGGESTION]
-[PROMPT_SUGGESTION]Can you show me how to set up a separate test database that gets cleared before each test run?[/PROMPT_SUGGESTION]
--->

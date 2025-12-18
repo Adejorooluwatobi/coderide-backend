@@ -22,6 +22,7 @@ describe('FareEstimateController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user and rider for the tests
     const riderUserEmail = `fare_rider_${Date.now()}@example.com`;

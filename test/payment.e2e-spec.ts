@@ -11,6 +11,7 @@ describe('Payment & PaymentMethod Controllers (e2e)', () => {
   let rideId: string;
   let paymentMethodId: string;
   let paymentId: string;
+  let authToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -21,16 +22,34 @@ describe('Payment & PaymentMethod Controllers (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user
+    const email = `payment_user_${Date.now()}@example.com`;
     const userRes = await request(app.getHttpServer()).post('/api/user').send({
-      email: `payment_user_${Date.now()}@example.com`,
+      email,
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
       password: 'Password123!',
+      firstName: 'Payment',
+      lastName: 'User',
+      userType: 'RIDER',
     });
+    expect(userRes.statusCode).toBe(201);
     userId = userRes.body.resultData.id;
 
+    // Login
+    const loginRes = await request(app.getHttpServer()).post('/api/auth/user/login').send({
+      email,
+      password: 'Password123!',
+    });
+    authToken = loginRes.body.accessToken;
+
     // Create a rider profile
-    const riderRes = await request(app.getHttpServer()).post('/api/rider').send({ userId });
+    const riderRes = await request(app.getHttpServer())
+      .post('/api/rider')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ userId });
+    expect(riderRes.statusCode).toBe(201);
     const riderId = riderRes.body.resultData.id;
 
     // Create a ride
@@ -38,7 +57,12 @@ describe('Payment & PaymentMethod Controllers (e2e)', () => {
       riderId,
       pickupAddress: 'A',
       destinationAddress: 'B',
+      pickupLatitude: 1,
+      pickupLongitude: 1,
+      destinationLatitude: 2,
+      destinationLongitude: 2,
     });
+    expect(rideRes.statusCode).toBe(201);
     rideId = rideRes.body.resultData.id;
   });
 

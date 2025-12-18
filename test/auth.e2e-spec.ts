@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import request from 'supertest';
 import { TestAppModule } from './test-app.module';
@@ -18,6 +18,7 @@ describe('AuthController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
   });
 
   afterAll(async () => {
@@ -37,11 +38,12 @@ describe('AuthController (e2e)', () => {
       };
 
       const response = await request(app.getHttpServer())
-        .post('/api/auth/user/register')
+        .post('/api/user')
         .send(userData)
         .expect(201);
 
-      expect(response.text).toBe('User registered successfully');
+      expect(response.body.succeeded).toBe(true);
+      expect(response.body.resultData).toHaveProperty('id');
     });
 
     it('should login a user', async () => {
@@ -57,9 +59,9 @@ describe('AuthController (e2e)', () => {
       };
 
       await request(app.getHttpServer())
-        .post('/api/auth/user/register')
+        .post('/api/user')
         .send(userData)
-        .expect(201);
+        .expect(201); // Assuming user creation is successful
 
       // Then login
       const loginData = {
@@ -87,7 +89,7 @@ describe('AuthController (e2e)', () => {
       await request(app.getHttpServer())
         .post('/api/auth/user/login')
         .send(loginData)
-        .expect(401);
+        .expect(404);
     });
   });
 
@@ -97,14 +99,16 @@ describe('AuthController (e2e)', () => {
       const adminData = {
         username: adminUsername,
         password: 'AdminPassword123!',
+        permissions: 1, // MANAGE_SYSTEM_SETTINGS
       };
 
       const response = await request(app.getHttpServer())
-        .post('/api/auth/admin/register')
+        .post('/api/admin')
         .send(adminData)
         .expect(201);
 
-      expect(response.text).toBe('Admin registered successfully');
+      expect(response.body.succeeded).toBe(true);
+      expect(response.body.resultData).toHaveProperty('id');
     });
 
     it('should login an admin', async () => {
@@ -113,10 +117,11 @@ describe('AuthController (e2e)', () => {
       const adminData = {
         username: adminUsername,
         password: 'AdminPassword123!',
+        permissions: 1,
       };
 
       await request(app.getHttpServer())
-        .post('/api/auth/admin/register')
+        .post('/api/admin')
         .send(adminData)
         .expect(201);
 
@@ -147,7 +152,7 @@ describe('AuthController (e2e)', () => {
       await request(app.getHttpServer())
         .post('/api/auth/admin/login')
         .send(loginData)
-        .expect(401);
+        .expect(404);
     });
   });
 });

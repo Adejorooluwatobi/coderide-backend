@@ -21,6 +21,7 @@ describe('DriverScheduleController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user and driver for the tests
     const userEmail = `schedule_user_${Date.now()}@example.com`;

@@ -20,11 +20,16 @@ describe('TicketMessageController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user for the tests
     const userRes = await request(app.getHttpServer()).post('/api/user').send({
       email: `message_user_${Date.now()}@example.com`,
       password: 'Password123!',
+      firstName: 'Ticket',
+      lastName: 'User',
+      phone: `081${Math.floor(Math.random() * 1000000000)}`,
+      userType: 'RIDER',
     });
     userId = userRes.body.resultData.id;
 

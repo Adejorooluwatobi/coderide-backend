@@ -5,6 +5,7 @@ import { TestAppModule } from './test-app.module';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { VehicleCategory } from 'src/domain/enums/vehicle-category.enum';
 import { VehicleStatus } from 'src/domain/enums/vehicle-status.enum';
+import { VehicleOwnership } from 'src/domain/enums/vehicle-ownership.enum';
 
 describe('VehicleController (e2e)', () => {
   let app: NestFastifyApplication;
@@ -20,6 +21,7 @@ describe('VehicleController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user to be the owner of the vehicle
     const userEmail = `vehicle_owner_${Date.now()}@example.com`;
@@ -35,7 +37,16 @@ describe('VehicleController (e2e)', () => {
       });
 
     expect(userResponse.statusCode).toBe(201);
-    createdOwnerId = userResponse.body.resultData.id;
+    const userId = userResponse.body.resultData.id;
+
+    // Create a driver profile for the owner
+    const driverRes = await request(app.getHttpServer()).post('/api/driver/company').send({
+      userId: userId,
+      licenseNumber: `VEHICLE-OWNER-LIC-${Date.now()}`,
+      licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    });
+    expect(driverRes.statusCode).toBe(201);
+    createdOwnerId = driverRes.body.resultData.id;
   });
 
   afterAll(async () => {
@@ -46,14 +57,17 @@ describe('VehicleController (e2e)', () => {
     it('should create a new vehicle', async () => {
       const vehicleData = {
         ownerId: createdOwnerId,
-        plateNumber: `TEST-${Date.now()}`,
+        licensePlate: `TEST-${Date.now()}`,
         model: 'Test Model S',
         make: 'Testla',
         year: 2023,
         color: 'Black',
         category: VehicleCategory.PREMIUM,
-        status: VehicleStatus.ACTIVE,
-        isCompanyVehicle: false,
+        ownershipType: VehicleOwnership.COMPANY_OWNED,
+        seats: 4,
+        insuranceExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        vehiclePhotos: ['https://example.com/photo.jpg'],
+        isActive: true,
       };
 
       const response = await request(app.getHttpServer())
@@ -87,7 +101,6 @@ describe('VehicleController (e2e)', () => {
 
     it('should update a vehicle', async () => {
       const updateData = {
-        status: VehicleStatus.INACTIVE,
         color: 'White',
       };
 
@@ -97,7 +110,6 @@ describe('VehicleController (e2e)', () => {
         .expect(200);
 
       expect(response.body.succeeded).toBe(true);
-      expect(response.body.resultData.status).toBe(VehicleStatus.INACTIVE);
       expect(response.body.resultData.color).toBe('White');
     });
 

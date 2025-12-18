@@ -19,6 +19,7 @@ describe('PromotionUsageController (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Create a user for the tests
     const userRes = await request(app.getHttpServer()).post('/api/user').send({
