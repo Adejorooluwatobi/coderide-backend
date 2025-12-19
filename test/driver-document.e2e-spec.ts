@@ -102,6 +102,7 @@ describe('DriverDocumentController (e2e)', () => {
 
       expect(response.body.succeeded).toBe(true);
       expect(Array.isArray(response.body.resultData)).toBe(true);
+      expect(response.body.resultData.length).toBeGreaterThan(0);
     });
 
     it('should get driver documents by status', async () => {
