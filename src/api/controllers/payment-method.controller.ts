@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException, UseGuards } from '@nestjs/common';
 import { PaymentMethodService } from '../../domain/services/payment-method.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { CreatePaymentMethodDto } from 'src/application/DTO/payment-method/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from 'src/application/DTO/payment-method/update-payment-method.dto';
 import { PaymentMethod } from 'src/domain/entities/payment-method.entity';
+import { UserGuard } from '../auth/guards';
+import { User } from 'src/shared/common/decorators/user.decorator';
 
 @Controller('payment-method')
 export class PaymentMethodController {
@@ -32,9 +34,11 @@ export class PaymentMethodController {
   }
 
   @Post()
+  @UseGuards(UserGuard)
   @ApiOperation({ summary: 'Create payment method' })
-  async create(@Body(new ValidationPipe()) data: CreatePaymentMethodDto) {
-    const method = await this.paymentMethodService.create(data as PaymentMethod);
+  async create(@Body(new ValidationPipe()) data: CreatePaymentMethodDto, @User() user: any) {
+    const userId = user.sub;
+    const method = await this.paymentMethodService.create({ ...data, userId });
     return { succeeded: true, message: 'Payment method created successfully', resultData: method };
   }
 

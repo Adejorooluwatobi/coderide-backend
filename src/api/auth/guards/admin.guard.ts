@@ -27,8 +27,8 @@ export class AdminGuard implements CanActivate {
       const payload = this.jwtService.verify(token, { secret });
       // Assign admin to request object
       request.admin = payload;
-      // Allow access if super-admin or admin
-      return payload.role === 'admin';
+      // Allow access if admin role exists
+      return payload.role?.toLowerCase() === 'admin';
     } catch {
       return false;
     }

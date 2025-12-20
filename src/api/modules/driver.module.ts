@@ -3,10 +3,10 @@ import { DriverController } from '../controllers/driver.controller';
 import { DriverService } from '../../domain/services/driver.service';
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
 import { PrismaDriverRepository } from 'src/infrastructure/persistence/prisma/repositories/prisma.driver.repository';
-import { JwtModule } from '@nestjs/jwt';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [DriverController],
   providers: [
     DriverService,

@@ -18,7 +18,8 @@ export class Driver extends BaseEntity {
     documentStatus: DocumentStatus;
     bankAccountDetails?: unknown; // JSON
 
-    vehicles?: Vehicle[];
+    ownedVehicles?: Vehicle[];
+    assignedVehicles?: Vehicle[];
     rides?: Ride[];
 
     constructor(data: Partial<Driver>) {

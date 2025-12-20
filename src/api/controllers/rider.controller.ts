@@ -5,6 +5,7 @@ import { CreateRiderDto } from 'src/application/DTO/rider/create-rider.dto';
 import { UpdateRiderDto } from 'src/application/DTO/rider/update-rider.dto';
 import { UserGuard } from '../auth/guards/user.guard';
 import { User } from '../../shared/common/decorators/user.decorator';
+import { RiderGuard } from '../auth/guards';
 
 @Controller('rider')
 export class RiderController {
@@ -50,7 +51,7 @@ export class RiderController {
   }
 
   @Post()
-  @UseGuards(UserGuard)
+  @UseGuards(RiderGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create rider account using JWT token' })
   async createRider(@Body(new ValidationPipe()) riderData: CreateRiderDto, @User() user: any) {

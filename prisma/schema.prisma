@@ -43,7 +43,7 @@ model Rider {
   preferredLanguage      String?
   savedLocations         Json?
   payments               Payment[]        @relation("PaymentRider")
-  defaultPaymentMethod   PaymentMethod?   @relation("DefaultPaymentMethod")
+  defaultPaymentMethod   PaymentMethod?   @relation("DefaultPaymentMethod", fields: [defaultPaymentMethodId], references: [id])
   promotionUsages        PromotionUsage[]
   rides                  Ride[]
   user                   User             @relation(fields: [userId], references: [id])
@@ -195,7 +195,7 @@ model PaymentMethod {
   paymentGatewayToken String
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
-  defaultForRider     Rider             @relation("DefaultPaymentMethod", fields: [id], references: [defaultPaymentMethodId])
+  defaultForRider     Rider?            @relation("DefaultPaymentMethod")
   user                User              @relation(fields: [userId], references: [id])
 
   @@index([userId])
