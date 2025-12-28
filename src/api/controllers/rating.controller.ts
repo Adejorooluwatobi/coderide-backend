@@ -3,6 +3,7 @@ import { RatingService } from '../../domain/services/rating.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { CreateRatingDto } from 'src/application/DTO/rating/create-rating.dto';
 import { UpdateRatingDto } from 'src/application/DTO/rating/update-rating.dto';
+import { Rating } from 'src/domain/entities/rating.entity';
 
 @Controller('rating')
 export class RatingController {
@@ -40,7 +41,7 @@ export class RatingController {
   @Post()
   @ApiOperation({ summary: 'Create rating' })
   async create(@Body(new ValidationPipe()) data: CreateRatingDto) {
-    const rating = await this.ratingService.create(data as any);
+    const rating = await this.ratingService.create(data as Rating);
     return { succeeded: true, message: 'Rating created successfully', resultData: rating };
   }
 

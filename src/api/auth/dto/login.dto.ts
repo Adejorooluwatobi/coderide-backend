@@ -14,7 +14,7 @@ export class UserLoginDto {
 }
 
 export class AdminLoginDto {
-  @IsEmail()
+  @IsString()
   @ApiProperty()
   @IsNotEmpty()
   username: string;

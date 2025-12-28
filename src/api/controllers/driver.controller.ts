@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException, UseGuards } from '@nestjs/common';
 import { DriverService } from '../../domain/services/driver.service';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { CreateDriverApplicationDto } from 'src/application/DTO/driver/create-driver-application.dto';
 import { CreateCompanyDriverDto } from 'src/application/DTO/driver/create-company-driver.dto';
 import { UpdateDriverDto } from 'src/application/DTO/driver/update-driver.dto';
+import { User } from 'src/shared/common/decorators/user.decorator';
+import { UserGuard } from '../auth/guards';
 
 @Controller('driver')
 export class DriverController {
@@ -63,9 +65,12 @@ export class DriverController {
   }
 
   @Post('apply')
+  @UseGuards(UserGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create driver application (independent driver)' })
-  async createApplication(@Body(new ValidationPipe()) driverData: CreateDriverApplicationDto) {
-    const driver = await this.driverService.createApplication(driverData as any);
+  async createApplication(@Body(new ValidationPipe()) driverData: CreateDriverApplicationDto, @User() User: any){
+    const userId = User.sub;
+    const driver = await this.driverService.createApplication({ ...driverData, userId });
     return {
       succeeded: true,
       message: 'Driver application created successfully',

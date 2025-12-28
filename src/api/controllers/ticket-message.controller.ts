@@ -3,6 +3,7 @@ import { TicketMessageService } from '../../domain/services/ticket-message.servi
 import { ApiOperation } from '@nestjs/swagger';
 import { CreateTicketMessageDto } from 'src/application/DTO/ticket-message/create-ticket-message.dto';
 import { UpdateTicketMessageDto } from 'src/application/DTO/ticket-message/update-ticket-message.dto';
+import { TicketMessage } from '@prisma/client';
 
 @Controller('ticket-message')
 export class TicketMessageController {
@@ -33,7 +34,7 @@ export class TicketMessageController {
   @Post()
   @ApiOperation({ summary: 'Create ticket message' })
   async create(@Body(new ValidationPipe()) data: CreateTicketMessageDto) {
-    const message = await this.ticketMessageService.create(data as any);
+    const message = await this.ticketMessageService.create(data as TicketMessage);
     return { succeeded: true, message: 'Ticket message created successfully', resultData: message };
   }
 

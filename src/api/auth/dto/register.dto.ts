@@ -17,7 +17,7 @@ export class AdminRegisterDto {
   @IsEmail()
   @ApiProperty()
   @IsNotEmpty()
-  username: string;
+  email: string;
 
   @IsString()
   @ApiProperty()

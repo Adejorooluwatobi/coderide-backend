@@ -1,8 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException, UseGuards } from '@nestjs/common';
 import { RiderService } from '../../domain/services/rider.service';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateRiderDto } from 'src/application/DTO/rider/create-rider.dto';
 import { UpdateRiderDto } from 'src/application/DTO/rider/update-rider.dto';
+import { UserGuard } from '../auth/guards/user.guard';
+import { User } from '../../shared/common/decorators/user.decorator';
 
 @Controller('rider')
 export class RiderController {
@@ -48,9 +50,12 @@ export class RiderController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create rider' })
-  async createRider(@Body(new ValidationPipe()) riderData: CreateRiderDto) {
-    const rider = await this.riderService.create(riderData as any);
+  @UseGuards(UserGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create rider account using JWT token' })
+  async createRider(@Body(new ValidationPipe()) riderData: CreateRiderDto, @User() user: any) {
+    const userId = user.sub;
+    const rider = await this.riderService.create({ ...riderData, userId });
     return {
       succeeded: true,
       message: 'Rider created successfully',

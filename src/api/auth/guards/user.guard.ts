@@ -27,8 +27,8 @@ export class UserGuard implements CanActivate {
       const payload = this.jwtService.verify(token, { secret });
       // Assign user to request object
       request.user = payload;
-      // Allow access if user or admin
-      return payload.role === 'user';
+      // Allow access if user is RIDER or DRIVER
+      return payload.role === 'RIDER' || payload.role === 'DRIVER';
     } catch {
       return false;
     }

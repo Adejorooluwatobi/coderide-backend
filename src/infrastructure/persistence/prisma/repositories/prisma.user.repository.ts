@@ -12,7 +12,7 @@ export class PrismaUserRepository implements IUserRepository {
   constructor(private prisma: PrismaService) {}
 
   private mapUserTypeToPrisma(userType: UserType): PrismaUserType {
-    return userType === UserType.RIDER ? 'RIDER' : 'DRIVER';
+    return userType as PrismaUserType;
   }
 
   async findById(id: string): Promise<User | null> {
@@ -21,8 +21,13 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   async findAll(): Promise<User[]> {
-    const users = await this.prisma.user.findMany();
-    return users.map(UserMapper.toDomain);
+    try {
+      const users = await this.prisma.user.findMany();
+      return users.map(UserMapper.toDomain);
+    } catch (error) {
+      console.error('Error in PrismaUserRepository.findAll:', error);
+      throw error;
+    }
   }
 
   async findByEmail(email: string): Promise<User | null> {

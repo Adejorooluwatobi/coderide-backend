@@ -3,6 +3,7 @@ import { PaymentMethodService } from '../../domain/services/payment-method.servi
 import { ApiOperation } from '@nestjs/swagger';
 import { CreatePaymentMethodDto } from 'src/application/DTO/payment-method/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from 'src/application/DTO/payment-method/update-payment-method.dto';
+import { PaymentMethod } from 'src/domain/entities/payment-method.entity';
 
 @Controller('payment-method')
 export class PaymentMethodController {
@@ -33,7 +34,7 @@ export class PaymentMethodController {
   @Post()
   @ApiOperation({ summary: 'Create payment method' })
   async create(@Body(new ValidationPipe()) data: CreatePaymentMethodDto) {
-    const method = await this.paymentMethodService.create(data as any);
+    const method = await this.paymentMethodService.create(data as PaymentMethod);
     return { succeeded: true, message: 'Payment method created successfully', resultData: method };
   }
 

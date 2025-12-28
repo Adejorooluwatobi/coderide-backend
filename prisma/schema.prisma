@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
 datasource db {
@@ -10,93 +8,84 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id              String        @id @default(uuid())
-  email           String        @unique
-  phone           String        @unique
-  password        String
-  firstName       String
-  lastName        String
-  profilePicture  String?
-  userType        UserType
-  isActive        Boolean       @default(true)
-  isVerified      Boolean       @default(false)
-  deletedAt       DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  rider              Rider?
-  driver             Driver?
-  paymentMethods     PaymentMethod[]
-  notifications      Notification[]
-  sentRatings        Rating[]           @relation("SentRatings")
-  receivedRatings    Rating[]           @relation("ReceivedRatings")
-  supportTickets     SupportTicket[]
-  ticketMessages     TicketMessage[]
-  referralsGiven     Referral[]         @relation("Referrer")
-  referralsReceived  Referral[]         @relation("Referred")
+  id                String          @id @default(uuid())
+  email             String          @unique
+  phone             String          @unique
+  password          String
+  firstName         String
+  lastName          String
+  profilePicture    String?
+  userType          UserType
+  isActive          Boolean         @default(true)
+  isVerified        Boolean         @default(false)
+  deletedAt         DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  driver            Driver?
+  notifications     Notification[]
+  paymentMethods    PaymentMethod[]
+  receivedRatings   Rating[]        @relation("ReceivedRatings")
+  sentRatings       Rating[]        @relation("SentRatings")
+  referralsReceived Referral?       @relation("Referred")
+  referralsGiven    Referral[]      @relation("Referrer")
+  rider             Rider?
+  supportTickets    SupportTicket[]
+  ticketMessages    TicketMessage[]
 }
 
 model Rider {
-  id                      String          @id @default(uuid())
-  user                    User            @relation(fields: [userId], references: [id])
-  userId                  String          @unique
-  defaultPaymentMethod    PaymentMethod?  @relation("DefaultPaymentMethod")
-  defaultPaymentMethodId  String?         @unique
-  rating                  Decimal?
-  totalRides              Int             @default(0)
-  preferredLanguage       String?
-  savedLocations          Json?
-  
-  rides           Ride[]
-  payments        Payment[]        @relation("PaymentRider")
-  promotionUsages PromotionUsage[]
+  id                     String           @id @default(uuid())
+  userId                 String           @unique
+  defaultPaymentMethodId String?          @unique
+  rating                 Decimal?
+  totalRides             Int              @default(0)
+  preferredLanguage      String?
+  savedLocations         Json?
+  payments               Payment[]        @relation("PaymentRider")
+  defaultPaymentMethod   PaymentMethod?   @relation("DefaultPaymentMethod")
+  promotionUsages        PromotionUsage[]
+  rides                  Ride[]
+  user                   User             @relation(fields: [userId], references: [id])
 }
 
 model Driver {
-  id                  String          @id @default(uuid())
-  user                User            @relation(fields: [userId], references: [id])
-  userId              String          @unique
-  licenseNumber       String          @unique
-  licenseExpiry       DateTime
-  rating              Decimal?
-  totalRides          Int             @default(0)
-  totalEarnings       Decimal         @default(0)
-  isOnline            Boolean         @default(false)
-  latitude            Float?
-  longitude           Float?
-  documentStatus      DocumentStatus  @default(PENDING)
-  bankAccountDetails  Json?
-
-  ownedVehicles       Vehicle[]           @relation("OwnedVehicles")
-  rides               Ride[]
-  vehicleAssignments  VehicleAssignment[]
-  earnings            Earning[]
-  schedules           DriverSchedule[]
-  documents           DriverDocument[]
+  id                 String              @id @default(uuid())
+  userId             String              @unique
+  licenseNumber      String              @unique
+  licenseExpiry      DateTime
+  rating             Decimal?
+  totalRides         Int                 @default(0)
+  totalEarnings      Decimal             @default(0)
+  isOnline           Boolean             @default(false)
+  latitude           Float?
+  longitude          Float?
+  documentStatus     DocumentStatus      @default(PENDING)
+  bankAccountDetails Json?
+  user               User                @relation(fields: [userId], references: [id])
+  documents          DriverDocument[]
+  schedules          DriverSchedule[]
+  earnings           Earning[]
+  rides              Ride[]
+  ownedVehicles      Vehicle[]           @relation("OwnedVehicles")
+  vehicleAssignments VehicleAssignment[]
 
   @@index([latitude, longitude])
 }
 
 model Admin {
-  id          String    @id @default(uuid())
-  username    String    @unique
-  password    String
-  permissions Int
-  
+  id              String          @id @default(uuid())
+  username        String          @unique
+  password        String
+  permissions     Int
   assignedTickets SupportTicket[]
 }
 
 model Vehicle {
-  id              String            @id @default(uuid())
-  ownershipType   VehicleOwnership  @default(DRIVER_OWNED)
-  
-  // For driver-owned vehicles
-  owner           Driver?           @relation("OwnedVehicles", fields: [ownerId], references: [id])
+  id              String              @id @default(uuid())
+  ownershipType   VehicleOwnership    @default(DRIVER_OWNED)
   ownerId         String?
-  
-  licensePlate    String            @unique
+  licensePlate    String              @unique
   make            String
   model           String
   year            Int
@@ -105,22 +94,19 @@ model Vehicle {
   seats           Int
   insuranceExpiry DateTime
   vehiclePhotos   String[]
-  isActive        Boolean           @default(true)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  
-  // For company-owned vehicles
+  isActive        Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  owner           Driver?             @relation("OwnedVehicles", fields: [ownerId], references: [id])
   assignments     VehicleAssignment[]
-  
+
   @@index([ownershipType])
   @@index([ownerId])
 }
 
 model VehicleAssignment {
   id             String    @id @default(uuid())
-  vehicle        Vehicle   @relation(fields: [vehicleId], references: [id])
   vehicleId      String
-  driver         Driver    @relation(fields: [driverId], references: [id])
   driverId       String
   assignedAt     DateTime  @default(now())
   returnedAt     DateTime?
@@ -131,7 +117,9 @@ model VehicleAssignment {
   notes          String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  
+  driver         Driver    @relation(fields: [driverId], references: [id])
+  vehicle        Vehicle   @relation(fields: [vehicleId], references: [id])
+
   @@index([vehicleId])
   @@index([driverId])
   @@index([assignedAt])
@@ -139,10 +127,8 @@ model VehicleAssignment {
 }
 
 model Ride {
-  id                   String        @id @default(uuid())
-  rider                Rider         @relation(fields: [riderId], references: [id])
+  id                   String           @id @default(uuid())
   riderId              String
-  driver               Driver?       @relation(fields: [driverId], references: [id])
   driverId             String?
   pickupLatitude       Float
   pickupLongitude      Float
@@ -150,7 +136,7 @@ model Ride {
   destinationLatitude  Float
   destinationLongitude Float
   destinationAddress   String
-  status               RideStatus    @default(REQUESTED)
+  status               RideStatus       @default(REQUESTED)
   rideType             VehicleCategory
   estimatedDistance    Decimal?
   actualDistance       Decimal?
@@ -158,20 +144,21 @@ model Ride {
   actualDuration       Int?
   estimatedPrice       Decimal?
   actualPrice          Decimal?
-  requestedAt          DateTime      @default(now())
+  requestedAt          DateTime         @default(now())
   acceptedAt           DateTime?
   startedAt            DateTime?
   completedAt          DateTime?
   cancelledAt          DateTime?
   cancellationReason   String?
   cancelledBy          CancelledBy?
-
-  payment         Payment?
-  ratings         Rating[]
-  trackingPoints  RideTracking[]
-  promotionUsages PromotionUsage[]
-  earnings        Earning[]
-  supportTickets  SupportTicket[]
+  earnings             Earning?
+  payment              Payment?
+  promotionUsages      PromotionUsage[]
+  ratings              Rating[]
+  driver               Driver?          @relation(fields: [driverId], references: [id])
+  rider                Rider            @relation(fields: [riderId], references: [id])
+  trackingPoints       RideTracking[]
+  supportTickets       SupportTicket[]
 
   @@index([status])
   @@index([riderId])
@@ -181,9 +168,7 @@ model Ride {
 
 model Payment {
   id                   String        @id @default(uuid())
-  ride                 Ride          @relation(fields: [rideId], references: [id])
   rideId               String        @unique
-  rider                Rider         @relation("PaymentRider", fields: [riderId], references: [id])
   riderId              String
   amount               Decimal
   paymentMethod        PaymentType
@@ -193,40 +178,41 @@ model Payment {
   currency             String        @default("NGN")
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
+  ride                 Ride          @relation(fields: [rideId], references: [id])
+  rider                Rider         @relation("PaymentRider", fields: [riderId], references: [id])
 
   @@index([riderId])
   @@index([paymentStatus])
 }
 
 model PaymentMethod {
-  id                  String    @id @default(uuid())
-  user                User      @relation(fields: [userId], references: [id])
+  id                  String            @id @default(uuid())
   userId              String
   type                PaymentMethodType
   cardLast4           String?
   cardBrand           String?
-  isDefault           Boolean   @default(false)
+  isDefault           Boolean           @default(false)
   paymentGatewayToken String
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  
-  defaultForRider     Rider?    @relation("DefaultPaymentMethod", fields: [id], references: [defaultPaymentMethodId])
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  defaultForRider     Rider             @relation("DefaultPaymentMethod", fields: [id], references: [defaultPaymentMethodId])
+  user                User              @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
 model Rating {
   id        String    @id @default(uuid())
-  ride      Ride      @relation(fields: [rideId], references: [id])
   rideId    String
-  rater     User      @relation("SentRatings", fields: [raterId], references: [id])
   raterId   String
-  ratee     User      @relation("ReceivedRatings", fields: [rateeId], references: [id])
   rateeId   String
   rating    Int
   comment   String?
   raterType RaterType
   createdAt DateTime  @default(now())
+  ratee     User      @relation("ReceivedRatings", fields: [rateeId], references: [id])
+  rater     User      @relation("SentRatings", fields: [raterId], references: [id])
+  ride      Ride      @relation(fields: [rideId], references: [id])
 
   @@index([rideId])
   @@index([raterId])
@@ -235,7 +221,6 @@ model Rating {
 
 model Notification {
   id        String           @id @default(uuid())
-  user      User             @relation(fields: [userId], references: [id])
   userId    String
   title     String
   message   String
@@ -247,6 +232,7 @@ model Notification {
   expiresAt DateTime?
   readAt    DateTime?
   createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([userId, isRead])
@@ -254,8 +240,8 @@ model Notification {
 }
 
 model Promotion {
-  id            String       @id @default(uuid())
-  code          String       @unique
+  id            String           @id @default(uuid())
+  code          String           @unique
   description   String
   discountType  DiscountType
   discountValue Decimal
@@ -264,30 +250,29 @@ model Promotion {
   validFrom     DateTime
   validUntil    DateTime
   usageLimit    Int
-  usedCount     Int          @default(0)
-  isActive      Boolean      @default(true)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  
+  usedCount     Int              @default(0)
+  isActive      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
   usages        PromotionUsage[]
-  
+
   @@index([code])
   @@index([validFrom, validUntil])
 }
 
 model PromotionUsage {
   id             String    @id @default(uuid())
-  promotion      Promotion @relation(fields: [promotionId], references: [id])
   promotionId    String
-  rider          Rider     @relation(fields: [riderId], references: [id])
   riderId        String
-  ride           Ride      @relation(fields: [rideId], references: [id])
   rideId         String
   discountAmount Decimal
   usedAt         DateTime  @default(now())
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  
+  promotion      Promotion @relation(fields: [promotionId], references: [id])
+  ride           Ride      @relation(fields: [rideId], references: [id])
+  rider          Rider     @relation(fields: [riderId], references: [id])
+
   @@index([promotionId])
   @@index([riderId])
   @@index([rideId])
@@ -295,9 +280,7 @@ model PromotionUsage {
 
 model Earning {
   id           String       @id @default(uuid())
-  driver       Driver       @relation(fields: [driverId], references: [id])
   driverId     String
-  ride         Ride         @relation(fields: [rideId], references: [id])
   rideId       String       @unique
   grossAmount  Decimal
   platformFee  Decimal
@@ -306,7 +289,9 @@ model Earning {
   paidOutAt    DateTime?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
-  
+  driver       Driver       @relation(fields: [driverId], references: [id])
+  ride         Ride         @relation(fields: [rideId], references: [id])
+
   @@index([driverId])
   @@index([payoutStatus])
 }
@@ -323,14 +308,13 @@ model FareEstimate {
   estimatedDuration    Int
   vehicleCategory      VehicleCategory
   createdAt            DateTime        @default(now())
-  
+
   @@index([riderId])
   @@index([createdAt])
 }
 
 model DriverSchedule {
   id        String   @id @default(uuid())
-  driver    Driver   @relation(fields: [driverId], references: [id])
   driverId  String
   dayOfWeek Int
   startTime String
@@ -338,13 +322,13 @@ model DriverSchedule {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+  driver    Driver   @relation(fields: [driverId], references: [id])
+
   @@index([driverId])
 }
 
 model DriverDocument {
   id              String         @id @default(uuid())
-  driver          Driver         @relation(fields: [driverId], references: [id])
   driverId        String
   documentType    DocumentType
   documentUrl     String
@@ -356,16 +340,15 @@ model DriverDocument {
   verifiedAt      DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
-  
+  driver          Driver         @relation(fields: [driverId], references: [id])
+
   @@index([driverId])
   @@index([status])
 }
 
 model Referral {
   id           String         @id @default(uuid())
-  referrer     User           @relation("Referrer", fields: [referrerId], references: [id])
   referrerId   String
-  referred     User           @relation("Referred", fields: [referredId], references: [id])
   referredId   String         @unique
   code         String         @unique
   status       ReferralStatus @default(PENDING)
@@ -373,30 +356,31 @@ model Referral {
   rewardedAt   DateTime?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
-  
+  referred     User           @relation("Referred", fields: [referredId], references: [id])
+  referrer     User           @relation("Referrer", fields: [referrerId], references: [id])
+
   @@index([referrerId])
   @@index([code])
 }
 
 model SupportTicket {
-  id          String         @id @default(uuid())
-  user        User           @relation(fields: [userId], references: [id])
+  id          String          @id @default(uuid())
   userId      String
-  ride        Ride?          @relation(fields: [rideId], references: [id])
   rideId      String?
   category    TicketCategory
   subject     String
   description String
-  status      TicketStatus   @default(OPEN)
-  priority    Priority       @default(MEDIUM)
-  assignedTo  Admin?         @relation(fields: [adminId], references: [id])
+  status      TicketStatus    @default(OPEN)
+  priority    Priority        @default(MEDIUM)
   adminId     String?
   resolvedAt  DateTime?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  assignedTo  Admin?          @relation(fields: [adminId], references: [id])
+  ride        Ride?           @relation(fields: [rideId], references: [id])
+  user        User            @relation(fields: [userId], references: [id])
   messages    TicketMessage[]
-  
+
   @@index([userId])
   @@index([status])
   @@index([rideId])
@@ -405,16 +389,16 @@ model SupportTicket {
 
 model TicketMessage {
   id           String        @id @default(uuid())
-  ticket       SupportTicket @relation(fields: [ticketId], references: [id])
   ticketId     String
-  sender       User          @relation(fields: [senderId], references: [id])
   senderId     String
   message      String
   isAdminReply Boolean       @default(false)
   attachments  String[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  
+  sender       User          @relation(fields: [senderId], references: [id])
+  ticket       SupportTicket @relation(fields: [ticketId], references: [id])
+
   @@index([ticketId])
   @@index([senderId])
 }
@@ -429,27 +413,23 @@ model SurgeZone {
   endTime    DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
-  
+
   @@index([isActive])
   @@index([startTime, endTime])
 }
 
 model RideTracking {
   id        String   @id @default(uuid())
-  ride      Ride     @relation(fields: [rideId], references: [id])
   rideId    String
   latitude  Float
   longitude Float
   timestamp DateTime @default(now())
   speed     Decimal?
   heading   Int?
+  ride      Ride     @relation(fields: [rideId], references: [id])
 
   @@index([rideId])
 }
-
-// ============================================
-// ENUMS
-// ============================================
 
 enum VehicleOwnership {
   DRIVER_OWNED
