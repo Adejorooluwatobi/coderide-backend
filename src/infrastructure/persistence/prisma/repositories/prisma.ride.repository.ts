@@ -48,7 +48,9 @@ export class PrismaRideRepository implements IRideRepository {
   }
 
   async updateStatus(id: string, status: string): Promise<Ride> {
+    console.log(`[PrismaRideRepository] updateStatus called for id: ${id} with status: ${status}`);
     const ride = await this.prisma.ride.update({ where: { id }, data: { status: status as RideStatus } });
+    console.log(`[PrismaRideRepository] Updated ride: ${JSON.stringify(ride)}`);
     return RideMapper.toDomain(ride);
   }
 

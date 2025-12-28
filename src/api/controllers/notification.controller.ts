@@ -1,10 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException, UseGuards, ForbiddenException } from '@nestjs/common';
 import { NotificationService } from '../../domain/services/notification.service';
-import { ApiOperation } from '@nestjs/swagger';
+import { User } from 'src/shared/common/decorators/user.decorator';
+import { UserGuard } from '../auth/guards/user.guard';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { CreateNotificationDto } from 'src/application/DTO/notification/create-notification.dto';
 import { UpdateNotificationDto } from 'src/application/DTO/notification/update-notification.dto';
 
 @Controller('notification')
+@UseGuards(UserGuard)
+@ApiBearerAuth()
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
@@ -23,10 +27,10 @@ export class NotificationController {
     return { succeeded: true, message: 'Notifications retrieved successfully', resultData: notifications };
   }
 
-  @Get('user/:userId')
-  @ApiOperation({ summary: 'Get notifications by user ID' })
-  async getByUserId(@Param('userId') userId: string) {
-    const notifications = await this.notificationService.findByUserId(userId);
+  @Get('user/me')
+  @ApiOperation({ summary: 'Get notifications for logged-in user' })
+  async getMyNotifications(@User() user: any) {
+    const notifications = await this.notificationService.findByUserId(user.sub);
     return { succeeded: true, message: 'Notifications retrieved successfully', resultData: notifications };
   }
 

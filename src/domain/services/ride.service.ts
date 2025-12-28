@@ -5,6 +5,7 @@ import { CreateRideParams, UpdateRideParams } from 'src/utils/type';
 import { NotificationType } from '../enums/notification.enum';
 import { NotificationService } from './notification.service';
 import { DriverService } from './driver.service';
+import { RiderService } from './rider.service';
 
 @Injectable()
 export class RideService {
@@ -14,6 +15,7 @@ export class RideService {
     private readonly rideRepository: IRideRepository,
     private readonly notificationService: NotificationService,
     private readonly driverService: DriverService,
+    private readonly riderService: RiderService,
   ) {}
 
   async findById(id: string): Promise<Ride | null> { 
@@ -70,6 +72,18 @@ export class RideService {
       }
     }
 
+    // Notify Rider
+    const rider = await this.riderService.findById(createdRide.riderId);
+    if (rider) {
+        await this.notificationService.create({
+            userId: rider.userId,
+            title: 'Ride Created',
+            message: `Your ride request to ${createdRide.destinationAddress} has been created successfully. Waiting for driver confirmation.`,
+            type: NotificationType.RIDE_REQUEST,
+            isRead: false,
+        });
+    }
+
     return createdRide;
   }
 
@@ -88,7 +102,21 @@ export class RideService {
       throw new Error('Invalid id provided');
     }
     this.logger.log(`Updating ride status with id: ${id} and status: ${status}`);
-    return this.rideRepository.updateStatus(id, status);
+    const updatedRide = await this.rideRepository.updateStatus(id, status);
+
+    // Notify Rider of status change
+    const rider = await this.riderService.findById(updatedRide.riderId);
+    if (rider) {
+        await this.notificationService.create({
+            userId: rider.userId,
+            title: 'Ride Status Update',
+            message: `Your ride status is now: ${status}`,
+            type: NotificationType.RIDE_REQUEST, // Assuming this enum exists, or fallback to generic
+            isRead: false,
+        });
+    }
+
+    return updatedRide;
   }
 
   async delete(id: string): Promise<void> {
