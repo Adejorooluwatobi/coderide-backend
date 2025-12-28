@@ -36,12 +36,19 @@ export class PrismaRideRepository implements IRideRepository {
   }
 
   async create(params: CreateRideParams): Promise<Ride> {
-    const ride = await this.prisma.ride.create({ data: params as Prisma.RideUncheckedCreateInput });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { promotionCode, ...rideData } = params;
+    const ride = await this.prisma.ride.create({ data: rideData as Prisma.RideUncheckedCreateInput });
     return RideMapper.toDomain(ride);
   }
 
   async update(id: string, params: Partial<UpdateRideParams>): Promise<Ride> {
     const ride = await this.prisma.ride.update({ where: { id }, data: params as Prisma.RideUpdateInput });
+    return RideMapper.toDomain(ride);
+  }
+
+  async updateStatus(id: string, status: string): Promise<Ride> {
+    const ride = await this.prisma.ride.update({ where: { id }, data: { status: status as RideStatus } });
     return RideMapper.toDomain(ride);
   }
 

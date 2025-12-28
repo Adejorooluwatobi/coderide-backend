@@ -2,6 +2,9 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Ride } from '../entities/ride.entity';
 import type { IRideRepository } from '../repositories/ride.repository.interface';
 import { CreateRideParams, UpdateRideParams } from 'src/utils/type';
+import { NotificationType } from '../enums/notification.enum';
+import { NotificationService } from './notification.service';
+import { DriverService } from './driver.service';
 
 @Injectable()
 export class RideService {
@@ -9,6 +12,8 @@ export class RideService {
   constructor(
     @Inject('IRideRepository')
     private readonly rideRepository: IRideRepository,
+    private readonly notificationService: NotificationService,
+    private readonly driverService: DriverService,
   ) {}
 
   async findById(id: string): Promise<Ride | null> { 
@@ -50,7 +55,22 @@ export class RideService {
 
   async create(ride: CreateRideParams): Promise<Ride> {
     this.logger.log(`Creating ride with data: ${JSON.stringify(ride)}`);
-    return this.rideRepository.create(ride);
+    const createdRide = await this.rideRepository.create(ride);
+
+    if (createdRide.driverId) {
+      const driver = await this.driverService.findById(createdRide.driverId);
+      if (driver) {
+        await this.notificationService.create({
+          userId: driver.userId,
+          title: 'New Ride Booking',
+          message: `A rider has booked you for a new ride from ${createdRide.pickupAddress} to ${createdRide.destinationAddress}`,
+          type: NotificationType.RIDE_REQUEST,
+          isRead: false,
+        });
+      }
+    }
+
+    return createdRide;
   }
 
   async update(id: string, ride: Partial<UpdateRideParams>): Promise<Ride> {
@@ -60,6 +80,15 @@ export class RideService {
     }
     this.logger.log(`Updating ride with id: ${id} and data: ${JSON.stringify(ride)}`);
     return this.rideRepository.update(id, ride);
+  }
+
+  async updateStatus(id: string, status: string): Promise<Ride> {
+    if (!id || typeof id !== 'string') {
+      this.logger.warn(`Invalid id provided for update: ${id}`);
+      throw new Error('Invalid id provided');
+    }
+    this.logger.log(`Updating ride status with id: ${id} and status: ${status}`);
+    return this.rideRepository.updateStatus(id, status);
   }
 
   async delete(id: string): Promise<void> {

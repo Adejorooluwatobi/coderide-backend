@@ -18,9 +18,6 @@ export class PrismaDriverRepository implements IDriverRepository {
       include: {
         vehicle: true,
       },
-      where: {
-        returnedAt: null,
-      },
     },
     rides: true,
   };

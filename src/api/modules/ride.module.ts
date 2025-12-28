@@ -5,9 +5,11 @@ import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.modul
 import { PrismaRideRepository } from 'src/infrastructure/persistence/prisma/repositories/prisma.ride.repository';
 import { RiderModule } from './rider.module';
 import { JwtModule } from '@nestjs/jwt';
+import { NotificationModule } from './notification.module';
+import { DriverModule } from './driver.module';
 
 @Module({
-  imports: [PrismaModule, RiderModule, JwtModule],
+  imports: [PrismaModule, RiderModule, JwtModule, NotificationModule, DriverModule],
   controllers: [RideController],
   providers: [
     RideService,

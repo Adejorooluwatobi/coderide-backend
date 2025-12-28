@@ -24,7 +24,11 @@ export class DriverMapper {
       // Mapping relations
       user: prismaDriver.user ? UserMapper.toDomain(prismaDriver.user) : undefined,
       ownedVehicles: prismaDriver.ownedVehicles?.map((v: any) => VehicleMapper.toDomain(v)) || [],
-      assignedVehicles: prismaDriver.vehicleAssignments?.map((va: any) => VehicleMapper.toDomain(va.vehicle)) || [],
+      assignedVehicles: prismaDriver.vehicleAssignments?.map((va: any) => ({
+        ...VehicleMapper.toDomain(va.vehicle),
+        assignedAt: va.assignedAt,
+        returnedAt: va.returnedAt,
+      })) || [],
       rides: prismaDriver.rides?.map((r: any) => RideMapper.toDomain(r)) || [],
     });
   }

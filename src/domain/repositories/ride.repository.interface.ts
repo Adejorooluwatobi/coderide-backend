@@ -9,5 +9,6 @@ export interface IRideRepository {
   findByStatus(status: string): Promise<Ride[]>;
   create(ride: CreateRideParams): Promise<Ride>;
   update(id: string, ride: Partial<UpdateRideParams>): Promise<Ride>;
+  updateStatus(id: string, status: string): Promise<Ride>;
   delete(id: string): Promise<void>;
 }
