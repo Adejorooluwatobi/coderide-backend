@@ -4,13 +4,13 @@ import { Driver } from './driver.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class VehicleAssignment extends BaseEntity {
-    @ApiProperty()
+    @ApiProperty({ type: () => Vehicle })
     vehicle: Vehicle;
 
     @ApiProperty()
     vehicleId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Driver })
     driver: Driver;
 
     @ApiProperty()

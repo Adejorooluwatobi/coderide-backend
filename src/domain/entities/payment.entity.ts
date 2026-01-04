@@ -8,13 +8,13 @@ export class Payment extends BaseEntity {
     @ApiProperty()
     rideId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Ride })
     ride?: Ride;
 
     @ApiProperty()
     riderId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Rider })
     rider?: Rider;
 
     @ApiProperty()

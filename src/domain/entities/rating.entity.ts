@@ -8,19 +8,19 @@ export class Rating extends BaseEntity {
     @ApiProperty()
     rideId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Ride })
     ride?: Ride;
 
     @ApiProperty()
     raterId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => User })
     rater?: User;
 
     @ApiProperty()
     rateeId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => User })
     ratee?: User;
 
     @ApiProperty()

@@ -8,7 +8,7 @@ export class PaymentMethod extends BaseEntity {
     @ApiProperty()
     userId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => User })
     user?: User;
 
     @ApiProperty()
@@ -26,7 +26,7 @@ export class PaymentMethod extends BaseEntity {
     @ApiProperty()
     paymentGatewayToken: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Rider })
     defaultForRider?: Rider;
 
     constructor(data: Partial<PaymentMethod>) {

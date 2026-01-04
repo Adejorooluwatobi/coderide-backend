@@ -13,13 +13,13 @@ export class Ride extends BaseEntity {
     @ApiProperty()
     riderId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Rider })
     rider?: Rider;
 
     @ApiProperty()
     driverId?: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Driver })
     driver?: Driver;
 
     @ApiProperty()
@@ -85,13 +85,13 @@ export class Ride extends BaseEntity {
     @ApiProperty()
     cancelledBy?: CancelledBy;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Payment })
     payment?: Payment;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [Rating] })
     ratings?: Rating[];
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [RideTracking] })
     trackingPoints?: RideTracking[];
 
     constructor(data: Partial<Ride>) {

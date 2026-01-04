@@ -6,7 +6,7 @@ export class RideTracking extends BaseEntity {
     @ApiProperty()
     rideId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Ride })
     ride?: Ride;
 
     @ApiProperty()

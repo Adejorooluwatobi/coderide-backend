@@ -4,6 +4,7 @@ import { ApiExtraModels, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserMapper } from 'src/infrastructure/mappers/user.mapper';
 import { CreateUserDto } from 'src/application/DTO/user/create-user.dto';
 import { UpdateUserDto } from 'src/application/DTO/user/update-user.dto';
+import { SecureUserResponseDto } from 'src/application/DTO/response';
 // REMOVED 'import * as bcrypt from 'bcrypt';' - Hashing is service logic
 
 @ApiExtraModels()
@@ -30,7 +31,7 @@ export class UserController {
 
   @Get()
   @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'Users retrieved successfully', type: [UserMapper] })
+  @ApiResponse({ status: 200, description: 'Users retrieved successfully', type: [SecureUserResponseDto] })
   async getAllUsers() {
     const users = await this.userService.findAll();
     const secureUsers = users.map(user => UserMapper.toSecureResponse(user));
@@ -87,7 +88,7 @@ export class UserController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({ status: 201, description: 'User created successfully', type: UserMapper })
+  @ApiResponse({ status: 201, description: 'User created successfully', type: SecureUserResponseDto })
   async createUser(@Body(new ValidationPipe()) userData: CreateUserDto) {
     // ALL BUSINESS/VALIDATION LOGIC REMOVED AND DELEGATED TO SERVICE
     // The service now handles: email/password existence, email format, email uniqueness, and password hashing.
@@ -114,7 +115,7 @@ export class UserController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update an existing user' })
-  @ApiResponse({ status: 200, description: 'User updated successfully', type: UserMapper })
+  @ApiResponse({ status: 200, description: 'User updated successfully', type: SecureUserResponseDto })
   async updateUser(@Param('id') userId: string, @Body(new ValidationPipe()) userData: Partial<UpdateUserDto>) {
     // Service handles the 'User not found' check and throws NotFoundException (404)
     const updatedUser = await this.userService.update(userId, userData);

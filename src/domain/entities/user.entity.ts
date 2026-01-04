@@ -39,22 +39,22 @@ export class User extends BaseEntity {
     @ApiProperty()
     deletedAt?: Date;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Rider })
     rider?: Rider;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Driver })
     driver?: Driver;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [PaymentMethod] })
     paymentMethods?: PaymentMethod[];
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [Notification] })
     notifications?: Notification[];
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [Rating] })
     sentRatings?: Rating[];
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [Rating] })
     receivedRatings?: Rating[];
 
     constructor(data: Partial<User>) {

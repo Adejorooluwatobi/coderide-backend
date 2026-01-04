@@ -7,7 +7,7 @@ export class Notification extends BaseEntity {
     @ApiProperty()
     userId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => User })
     user?: User;
 
     @ApiProperty()

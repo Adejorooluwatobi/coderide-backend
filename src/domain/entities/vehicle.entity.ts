@@ -10,7 +10,7 @@ export class Vehicle extends BaseEntity {
     @ApiProperty()
     ownershipType: VehicleOwnership;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Driver })
     owner: Driver;
 
     @ApiProperty()

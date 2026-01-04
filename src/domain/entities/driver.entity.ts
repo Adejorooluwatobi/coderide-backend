@@ -9,7 +9,7 @@ export class Driver extends BaseEntity {
     @ApiProperty()
     userId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => User })
     user?: User;
 
     @ApiProperty()
@@ -42,13 +42,13 @@ export class Driver extends BaseEntity {
     @ApiProperty()
     bankAccountDetails?: unknown; // JSON
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [Vehicle] })
     ownedVehicles?: Vehicle[];
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [Vehicle] })
     assignedVehicles?: Vehicle[];
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [Ride] })
     rides?: Ride[];
 
     constructor(data: Partial<Driver>) {

@@ -9,7 +9,7 @@ export class Rider extends BaseEntity {
     @ApiProperty()
     userId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => User })
     user?: User;
 
     @ApiProperty()
@@ -21,7 +21,7 @@ export class Rider extends BaseEntity {
     @ApiProperty()
     defaultPaymentMethodId?: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => PaymentMethod })
     defaultPaymentMethod?: PaymentMethod;
 
     @ApiProperty()
@@ -30,10 +30,10 @@ export class Rider extends BaseEntity {
     @ApiProperty()
     savedLocations?: any; // JSON
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [Ride] })
     rides?: Ride[];
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [Payment] })
     payments?: Payment[];
 
     constructor(data: Partial<Rider>) {
