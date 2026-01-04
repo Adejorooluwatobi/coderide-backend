@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException, UseGuards } from '@nestjs/common';
 import { RideService } from '../../domain/services/ride.service';
 import { DriverService } from '../../domain/services/driver.service';
-import { ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { CreateRideDto } from 'src/application/DTO/ride/create-ride.dto';
 import { UpdateRideDto } from 'src/application/DTO/ride/update-ride.dto';
 import { Ride } from 'src/domain/entities/ride.entity';
@@ -22,6 +22,7 @@ export class RideController {
   @UseGuards(UserGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get ride by ID' })
+  @ApiResponse({ status: 200, description: 'Ride retrieved successfully', type: Ride })
   async getRideById(@Param('id') id: string, @User() user: any) {
     const ride = await this.rideService.findById(id);
     if (!ride) {
@@ -55,6 +56,7 @@ export class RideController {
   @UseGuards(AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all rides' })
+  @ApiResponse({ status: 200, description: 'Rides retrieved successfully', type: [Ride] })
   async getAllRides() {
     const rides = await this.rideService.findAll();
     return { succeeded: true, message: 'Rides retrieved successfully', resultData: rides };
@@ -64,6 +66,7 @@ export class RideController {
   @UseGuards(RiderGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get rides for logged-in rider' })
+  @ApiResponse({ status: 200, description: 'Rides retrieved successfully', type: [Ride] })
   async getMyRiderRides(@User() user: any) {
     const rider = await this.riderService.findByUserId(user.sub);
     if (!rider) {
@@ -77,6 +80,7 @@ export class RideController {
   @UseGuards(DriverGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get rides for logged-in driver' })
+  @ApiResponse({ status: 200, description: 'Rides retrieved successfully', type: [Ride] })
   async getMyDriverRides(@User() user: any) {
     const driver = await this.driverService.findByUserId(user.sub);
     if (!driver) {
@@ -88,6 +92,7 @@ export class RideController {
 
   @Get('status/:status')
   @ApiOperation({ summary: 'Get rides by status' })
+  @ApiResponse({ status: 200, description: 'Rides retrieved successfully', type: [Ride] })
   async getRidesByStatus(@Param('status') status: string) {
     const rides = await this.rideService.findByStatus(status);
     return { succeeded: true, message: 'Rides retrieved successfully', resultData: rides };
@@ -97,6 +102,7 @@ export class RideController {
   @UseGuards(UserGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create ride' })
+  @ApiResponse({ status: 201, description: 'Ride created successfully', type: Ride })
   async createRide(@Body(new ValidationPipe()) rideData: CreateRideDto, @User() user: any) {
     const rider = await this.riderService.findByUserId(user.sub);
     if (!rider) {
@@ -110,11 +116,17 @@ export class RideController {
   @UseGuards(RiderGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update ride' })
+  @ApiResponse({ status: 200, description: 'Ride updated successfully', type: Ride })
   async updateRide(@Param('id') id: string, @Body(new ValidationPipe()) rideData: Partial<UpdateRideDto>) {
     const ride = await this.rideService.update(id, rideData);
     return { succeeded: true, message: 'Ride updated successfully', resultData: ride };
   }
 
+  @Put(':id/status')
+  @UseGuards(DriverGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update ride status' })
+  @ApiResponse({ status: 200, description: 'Ride status updated successfully', type: Ride })
   async updateRideStatus(@Param('id') id: string, @Body(new ValidationPipe()) rideData: Partial<UpdateRideDto> | string, @User() user: any) {
     console.log(`[RideController] updateRideStatus called for id: ${id}`);
     
@@ -153,7 +165,10 @@ export class RideController {
   }
 
   @Delete(':id')
+  @UseGuards(RiderGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete ride' })
+  @ApiResponse({ status: 200, description: 'Ride deleted successfully' })
   async deleteRide(@Param('id') id: string) {
     await this.rideService.delete(id);
     return { succeeded: true, message: 'Ride deleted successfully' };

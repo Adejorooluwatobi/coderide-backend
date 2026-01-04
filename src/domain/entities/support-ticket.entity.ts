@@ -6,20 +6,46 @@ import { TicketMessage } from './ticket-message.entity';
 import { TicketCategory } from '../enums/ticket-category.enum';
 import { TicketStatus } from '../enums/ticket-status.enum';
 import { Priority } from '../enums/priority.enum';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class SupportTicket extends BaseEntity {
+    @ApiProperty()
     user: User;
+
+    @ApiProperty()
     userId: string;
+
+    @ApiProperty()
     ride?: Ride;
+
+    @ApiProperty()
     rideId?: string;
+
+    @ApiProperty()
     category: TicketCategory;
+
+    @ApiProperty()
     subject: string;
+
+    @ApiProperty()
     description: string;
+
+    @ApiProperty()
     status: TicketStatus;
+
+    @ApiProperty()
     priority: Priority;
+
+    @ApiProperty()
     assignedTo?: Admin;
+
+    @ApiProperty()
     adminId?: string;
+
+    @ApiProperty()
     resolvedAt?: Date;
+
+    @ApiProperty()
     messages?: TicketMessage[];
 
     constructor(data: Partial<SupportTicket>) {

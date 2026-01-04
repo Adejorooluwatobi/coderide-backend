@@ -1,11 +1,12 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException, UseGuards } from '@nestjs/common';
 import { RiderService } from '../../domain/services/rider.service';
-import { ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { CreateRiderDto } from 'src/application/DTO/rider/create-rider.dto';
 import { UpdateRiderDto } from 'src/application/DTO/rider/update-rider.dto';
 import { UserGuard } from '../auth/guards/user.guard';
 import { User } from '../../shared/common/decorators/user.decorator';
 import { RiderGuard } from '../auth/guards';
+import { Rider } from 'src/domain/entities/rider.entity';
 
 @Controller('rider')
 export class RiderController {
@@ -13,6 +14,7 @@ export class RiderController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get rider by ID' })
+  @ApiResponse({ status: 200, description: 'Rider retrieved successfully', type: Rider })
   async getRiderById(@Param('id') id: string) {
     const rider = await this.riderService.findById(id);
     if (!rider) {
@@ -27,6 +29,7 @@ export class RiderController {
 
   @Get()
   @ApiOperation({ summary: 'Get all riders' })
+  @ApiResponse({ status: 200, description: 'Riders retrieved successfully', type: [Rider] })
   async getAllRiders() {
     const riders = await this.riderService.findAll();
     return {
@@ -38,6 +41,7 @@ export class RiderController {
 
   @Get('user/:userId')
   @ApiOperation({ summary: 'Get rider by user ID' })
+  @ApiResponse({ status: 200, description: 'Rider retrieved successfully', type: Rider })
   async getRiderByUserId(@Param('userId') userId: string) {
     const rider = await this.riderService.findByUserId(userId);
     if (!rider) {
@@ -54,6 +58,7 @@ export class RiderController {
   @UseGuards(RiderGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create rider account using JWT token' })
+  @ApiResponse({ status: 201, description: 'Rider created successfully', type: Rider })
   async createRider(@Body(new ValidationPipe()) riderData: CreateRiderDto, @User() user: any) {
     const userId = user.sub;
     const rider = await this.riderService.create({ ...riderData, userId });
@@ -66,6 +71,7 @@ export class RiderController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update rider' })
+  @ApiResponse({ status: 200, description: 'Rider updated successfully', type: Rider })
   async updateRider(@Param('id') id: string, @Body(new ValidationPipe()) riderData: Partial<UpdateRiderDto>) {
     const rider = await this.riderService.update(id, riderData);
     return {
@@ -77,6 +83,7 @@ export class RiderController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete rider' })
+  @ApiResponse({ status: 200, description: 'Rider deleted successfully' })
   async deleteRider(@Param('id') id: string) {
     await this.riderService.delete(id);
     return {

@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException } from '@nestjs/common';
 import { VehicleService } from '../../domain/services/vehicle.service';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateVehicleDto } from 'src/application/DTO/vehicle/create-vehicle.dto';
 import { UpdateVehicleDto } from 'src/application/DTO/vehicle/update-vehicle.dto';
+import { Vehicle } from 'src/domain/entities/vehicle.entity';
 
 @Controller('vehicle')
 export class VehicleController {
@@ -10,6 +11,7 @@ export class VehicleController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get vehicle by ID' })
+  @ApiResponse({ status: 200, description: 'Vehicle retrieved successfully', type: Vehicle })
   async getVehicleById(@Param('id') id: string) {
     const vehicle = await this.vehicleService.findById(id);
     if (!vehicle) {
@@ -24,6 +26,7 @@ export class VehicleController {
 
   @Get()
   @ApiOperation({ summary: 'Get all vehicles' })
+  @ApiResponse({ status: 200, description: 'Vehicles retrieved successfully', type: [Vehicle] })
   async getAllVehicles() {
     const vehicles = await this.vehicleService.findAll();
     return {
@@ -35,6 +38,7 @@ export class VehicleController {
 
   @Get('license/:licensePlate')
   @ApiOperation({ summary: 'Get vehicle by license plate' })
+  @ApiResponse({ status: 200, description: 'Vehicle retrieved successfully', type: Vehicle })
   async getVehicleByLicensePlate(@Param('licensePlate') licensePlate: string) {
     const vehicle = await this.vehicleService.findByLicensePlate(licensePlate);
     if (!vehicle) {
@@ -49,6 +53,7 @@ export class VehicleController {
 
   @Get('owner/:ownerId')
   @ApiOperation({ summary: 'Get vehicles by owner ID' })
+  @ApiResponse({ status: 200, description: 'Vehicles retrieved successfully', type: [Vehicle] })
   async getVehiclesByOwnerId(@Param('ownerId') ownerId: string) {
     const vehicles = await this.vehicleService.findByOwnerId(ownerId);
     return {
@@ -60,6 +65,7 @@ export class VehicleController {
 
   @Get('available/company')
   @ApiOperation({ summary: 'Get available company vehicles' })
+  @ApiResponse({ status: 200, description: 'Available company vehicles retrieved successfully', type: [Vehicle] })
   async getAvailableCompanyVehicles() {
     const vehicles = await this.vehicleService.findAvailableCompanyVehicles();
     return {
@@ -71,6 +77,7 @@ export class VehicleController {
 
   @Post()
   @ApiOperation({ summary: 'Create vehicle' })
+  @ApiResponse({ status: 201, description: 'Vehicle created successfully', type: Vehicle })
   async createVehicle(@Body(new ValidationPipe()) vehicleData: CreateVehicleDto) {
     const vehicle = await this.vehicleService.create(vehicleData);
     return {
@@ -82,6 +89,7 @@ export class VehicleController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update vehicle' })
+  @ApiResponse({ status: 200, description: 'Vehicle updated successfully', type: Vehicle })
   async updateVehicle(@Param('id') id: string, @Body(new ValidationPipe()) vehicleData: Partial<UpdateVehicleDto>) {
     const vehicle = await this.vehicleService.update(id, vehicleData);
     return {
@@ -93,6 +101,7 @@ export class VehicleController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete vehicle' })
+  @ApiResponse({ status: 200, description: 'Vehicle deleted successfully' })
   async deleteVehicle(@Param('id') id: string) {
     await this.vehicleService.delete(id);
     return {
