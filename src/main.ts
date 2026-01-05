@@ -5,15 +5,30 @@ import { join } from 'path';
 import { applyDecorators, ValidationPipe } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiConflictResponse, ApiNotFoundResponse, ApiUnauthorizedResponse, DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as fastifyStatic from '@fastify/static';
+import helmet from '@fastify/helmet';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+
+  // Register helmet with CSP configuration to allow Swagger UI to work
+  await app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: [`'self'`],
+        styleSrc: [`'self'`, `'unsafe-inline'`],
+        imgSrc: [`'self'`, 'data:', 'validator.swagger.io'],
+        scriptSrc: [`'self'`, `'unsafe-inline'`],
+      },
+    },
+  });
+
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.useGlobalPipes(new ValidationPipe({ 
     whitelist: true,
+    forbidNonWhitelisted: true,
     transform: true,
   }));
 
@@ -54,6 +69,8 @@ async function bootstrap() {
     decorateReply: false,
     index: 'test-client.html',
   });
+
+  app.enableShutdownHooks();
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
   console.log(`Application is running on: ${await app.getUrl()}`);

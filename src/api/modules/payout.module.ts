@@ -6,9 +6,10 @@ import { PaymentModule } from './payment.module';
 import { EarningModule } from './earning.module';
 import { DriverModule } from './driver.module';
 import { PayoutController } from '../controllers/payout.controller';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, PaymentModule, EarningModule, DriverModule],
+  imports: [PrismaModule, PaymentModule, EarningModule, DriverModule, AuthModule],
   controllers: [PayoutController],
   providers: [
     PayoutService,

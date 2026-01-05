@@ -1,13 +1,14 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AdminController } from '../controllers/admin.controller';
 import { AdminDashboardController } from '../controllers/admin-dashboard.controller';
 import { AdminService } from '../../domain/services/admin.service';
 import { AdminDashboardService } from '../../domain/services/admin-dashboard.service';
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
 import { PrismaAdminRepository } from 'src/infrastructure/persistence/prisma/repositories/prisma.admin.repository';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, forwardRef(() => AuthModule)],
   controllers: [AdminController, AdminDashboardController],
   providers: [
     AdminService,

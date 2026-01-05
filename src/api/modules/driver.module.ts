@@ -15,6 +15,6 @@ import { AuthModule } from '../auth/auth.module';
       useClass: PrismaDriverRepository,
     },
   ],
-  exports: [DriverService],
+  exports: [DriverService, 'IDriverRepository'],
 })
 export class DriverModule {}

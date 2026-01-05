@@ -14,6 +14,6 @@ import { PrismaEarningRepository } from 'src/infrastructure/persistence/prisma/r
       useClass: PrismaEarningRepository,
     },
   ],
-  exports: [EarningService],
+  exports: [EarningService, 'IEarningRepository'],
 })
 export class EarningModule {}

@@ -1,4 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './application/use-cases/app.service';
 import { FilesModule } from './shared/files/files.module';
@@ -30,6 +31,9 @@ import { ReferralModule } from './api/modules/referral.module';
 import { RideTrackingModule } from './api/modules/ride-tracking.module';
 import { AuthModule } from './api/auth/auth.module';
 import { PayoutModule } from './api/modules/payout.module';
+import { PricingModule } from './api/modules/pricing.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
@@ -45,6 +49,16 @@ import { PayoutModule } from './api/modules/payout.module';
       envFilePath: '.env',
       ignoreEnvFile: false,
     }),
+    BullModule.forRoot({
+      redis: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      },
+    }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 1 minute
+      limit: 100, // limit each IP to 100 requests per ttl
+    }]),
     PrismaModule,
     AuthModule,
     AdminModule,
@@ -57,6 +71,7 @@ import { PayoutModule } from './api/modules/payout.module';
     PaymentMethodModule,
     PaymentModule,
     PayoutModule,
+    PricingModule,
     PromotionUsageModule,
     PromotionModule,
     RatingModule,
@@ -72,7 +87,13 @@ import { PayoutModule } from './api/modules/payout.module';
     VehicleAssignmentModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    AppService,
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

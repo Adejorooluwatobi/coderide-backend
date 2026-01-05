@@ -9,9 +9,10 @@ import { NotificationModule } from './notification.module';
 import { DriverModule } from './driver.module';
 import { EarningModule } from './earning.module';
 import { SurgeZoneModule } from './surge-zone.module';
+import { PricingModule } from './pricing.module';
 
 @Module({
-  imports: [PrismaModule, RiderModule, JwtModule, NotificationModule, DriverModule, EarningModule, SurgeZoneModule],
+  imports: [PrismaModule, RiderModule, JwtModule, NotificationModule, DriverModule, EarningModule, SurgeZoneModule, PricingModule],
   controllers: [RideController],
   providers: [
     RideService,
