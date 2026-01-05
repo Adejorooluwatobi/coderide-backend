@@ -3,9 +3,10 @@ import { PaymentMethodController } from '../controllers/payment-method.controlle
 import { PaymentMethodService } from '../../domain/services/payment-method.service';
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
 import { PrismaPaymentMethodRepository } from 'src/infrastructure/persistence/prisma/repositories/prisma.payment-method.repository';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [PaymentMethodController],
   providers: [
     PaymentMethodService,

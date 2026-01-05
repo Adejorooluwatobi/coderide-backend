@@ -43,7 +43,7 @@ model Rider {
   preferredLanguage      String?
   savedLocations         Json?
   payments               Payment[]        @relation("PaymentRider")
-  defaultPaymentMethod   PaymentMethod?   @relation("DefaultPaymentMethod")
+  defaultPaymentMethod   PaymentMethod?   @relation("DefaultPaymentMethod", fields: [defaultPaymentMethodId], references: [id])
   promotionUsages        PromotionUsage[]
   rides                  Ride[]
   user                   User             @relation(fields: [userId], references: [id])
@@ -66,11 +66,14 @@ model Driver {
   documents          DriverDocument[]
   schedules          DriverSchedule[]
   earnings           Earning[]
+  payouts            Payout[]
   rides              Ride[]
   ownedVehicles      Vehicle[]           @relation("OwnedVehicles")
   vehicleAssignments VehicleAssignment[]
 
   @@index([latitude, longitude])
+  @@index([isOnline])
+  @@index([documentStatus])
 }
 
 model Admin {
@@ -160,10 +163,9 @@ model Ride {
   trackingPoints       RideTracking[]
   supportTickets       SupportTicket[]
 
-  @@index([status])
-  @@index([riderId])
-  @@index([driverId])
-  @@index([requestedAt])
+  @@index([status, riderId])
+  @@index([status, driverId])
+  @@index([requestedAt, status])
 }
 
 model Payment {
@@ -195,7 +197,7 @@ model PaymentMethod {
   paymentGatewayToken String
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
-  defaultForRider     Rider             @relation("DefaultPaymentMethod", fields: [id], references: [defaultPaymentMethodId])
+  defaultForRider     Rider?            @relation("DefaultPaymentMethod")
   user                User              @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -234,9 +236,7 @@ model Notification {
   createdAt DateTime         @default(now())
   user      User             @relation(fields: [userId], references: [id])
 
-  @@index([userId])
-  @@index([userId, isRead])
-  @@index([expiresAt])
+  @@index([userId, isRead, createdAt])
 }
 
 model Promotion {
@@ -282,6 +282,7 @@ model Earning {
   id           String       @id @default(uuid())
   driverId     String
   rideId       String       @unique
+  payoutId     String?
   grossAmount  Decimal
   platformFee  Decimal
   netAmount    Decimal
@@ -291,9 +292,26 @@ model Earning {
   updatedAt    DateTime     @updatedAt
   driver       Driver       @relation(fields: [driverId], references: [id])
   ride         Ride         @relation(fields: [rideId], references: [id])
+  payout       Payout?      @relation(fields: [payoutId], references: [id])
+
+  @@index([driverId, payoutStatus])
+  @@index([createdAt, payoutStatus])
+}
+
+model Payout {
+  id               String       @id @default(uuid())
+  driverId         String
+  amount           Decimal
+  status           PayoutStatus @default(PENDING)
+  transferReference String?     @unique
+  processedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  earnings         Earning[]
+  driver           Driver       @relation(fields: [driverId], references: [id])
 
   @@index([driverId])
-  @@index([payoutStatus])
+  @@index([status])
 }
 
 model FareEstimate {

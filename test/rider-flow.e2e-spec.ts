@@ -1,21 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import { ValidationPipe } from '@nestjs/common';
+import request from 'supertest';
 import { AppModule } from './../src/app.module';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 describe('Complete Rider Flow (e2e)', () => {
-  let app: INestApplication;
+  let app: NestFastifyApplication;
   let userId: string;
   let riderId: string;
   let rideId: string;
+  let authToken: string;
+  let userEmail: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
+    app.setGlobalPrefix('api');
+    app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
   });
 
   afterAll(async () => {
@@ -24,7 +30,8 @@ describe('Complete Rider Flow (e2e)', () => {
 
   it('Step 1: Create rider user', async () => {
     const userData = {
-      email: `rider${Date.now()}@example.com`,
+      // Use a consistent email for login
+      email: (userEmail = `rider${Date.now()}@example.com`),
       phone: `081${Math.floor(Math.random() * 1000000000)}`,
       password: 'Password123!',
       firstName: 'John',
@@ -39,6 +46,17 @@ describe('Complete Rider Flow (e2e)', () => {
 
     userId = response.body.resultData.id;
     expect(userId).toBeDefined();
+
+    // Step 1.5: Login to get auth token
+    const loginResponse = await request(app.getHttpServer())
+      .post('/api/auth/user/login')
+      .send({
+        email: userEmail,
+        password: 'Password123!',
+      });
+
+    expect(loginResponse.statusCode).toBe(200);
+    authToken = loginResponse.body.accessToken;
   });
 
   it('Step 2: Create rider profile', async () => {
@@ -53,6 +71,7 @@ describe('Complete Rider Flow (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/api/rider')
+      .set('Authorization', `Bearer ${authToken}`)
       .send(riderData)
       .expect(201);
 
@@ -75,6 +94,7 @@ describe('Complete Rider Flow (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/api/fare-estimate')
+      .set('Authorization', `Bearer ${authToken}`)
       .send(fareData)
       .expect(201);
 
@@ -98,6 +118,7 @@ describe('Complete Rider Flow (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/api/ride')
+      .set('Authorization', `Bearer ${authToken}`)
       .send(rideData)
       .expect(201);
 
@@ -109,6 +130,7 @@ describe('Complete Rider Flow (e2e)', () => {
   it('Step 5: Get ride details', async () => {
     const response = await request(app.getHttpServer())
       .get(`/api/ride/${rideId}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
     expect(response.body.resultData.riderId).toBe(riderId);
@@ -118,6 +140,7 @@ describe('Complete Rider Flow (e2e)', () => {
   it('Step 6: Get all rider rides', async () => {
     const response = await request(app.getHttpServer())
       .get(`/api/ride/rider/${riderId}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
     expect(Array.isArray(response.body.resultData)).toBe(true);

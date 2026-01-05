@@ -4,7 +4,8 @@ import { PaymentMethod } from '../../../../domain/entities/payment-method.entity
 import { CreatePaymentMethodParams, UpdatePaymentMethodParams } from '../../../../utils/type';
 import { PrismaService } from '../prisma.service';
 import { PaymentMethodMapper } from '../../../mappers/payment-method.mapper';
-import { Prisma } from '@prisma/client';
+import { Prisma, PaymentMethodType as PrismaPaymentMethodType } from '@prisma/client';
+import { PaymentMethodType } from 'src/domain/enums/payment.enum';
 @Injectable()
 export class PrismaPaymentMethodRepository implements IPaymentMethodRepository {
   constructor(private prisma: PrismaService) {}
@@ -25,12 +26,23 @@ export class PrismaPaymentMethodRepository implements IPaymentMethodRepository {
   }
 
   async create(params: CreatePaymentMethodParams): Promise<PaymentMethod> {
-    const method = await this.prisma.paymentMethod.create({ data: params as Prisma.PaymentMethodUncheckedCreateInput });
+    const method = await this.prisma.paymentMethod.create({
+      data: {
+        userId: params.userId,
+        type: params.type as unknown as PrismaPaymentMethodType,
+        paymentGatewayToken: params.paymentGatewayToken,
+        cardLast4: params.cardLast4,
+        cardBrand: params.cardBrand,
+      },
+    });
     return PaymentMethodMapper.toDomain(method);
   }
 
   async update(id: string, params: Partial<UpdatePaymentMethodParams>): Promise<PaymentMethod> {
-    const method = await this.prisma.paymentMethod.update({ where: { id }, data: params as Prisma.PaymentMethodUpdateInput });
+    const method = await this.prisma.paymentMethod.update({
+      where: { id },
+      data: params as Prisma.PaymentMethodUpdateInput,
+    });
     return PaymentMethodMapper.toDomain(method);
   }
 

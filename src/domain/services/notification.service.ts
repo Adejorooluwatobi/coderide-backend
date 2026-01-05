@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Notification } from '../entities/notification.entity';
 import type { INotificationRepository } from '../repositories/notification.repository.interface';
 import { CreateNotificationParams, UpdateNotificationParams } from 'src/utils/type';
+import { AppGateway } from 'src/shared/websockets/app.gateway';
 
 @Injectable()
 export class NotificationService {
@@ -9,6 +10,7 @@ export class NotificationService {
   constructor(
     @Inject('INotificationRepository')
     private readonly notificationRepository: INotificationRepository,
+    private readonly appGateway: AppGateway,
   ) {}
 
   async findById(id: string): Promise<Notification | null> {
@@ -34,7 +36,13 @@ export class NotificationService {
 
   async create(notification: CreateNotificationParams): Promise<Notification> {
     this.logger.log(`Creating notification with data: ${JSON.stringify(notification)}`);
-    return this.notificationRepository.create(notification);
+    const newNotification = await this.notificationRepository.create(notification);
+    
+    // Emit real-time notification
+    // We emit to a room named after the userId so only they receive it
+    this.appGateway.server.to(notification.userId).emit('notification', newNotification);
+    
+    return newNotification;
   }
 
   async update(id: string, notification: Partial<UpdateNotificationParams>): Promise<Notification> {

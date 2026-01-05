@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException } from '@nestjs/common';
 import { AdminService } from '../../domain/services/admin.service';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateAdminDto } from 'src/application/DTO/admin/create-admin.dto';
 import { UpdateAdminDto } from 'src/application/DTO/admin/update-admin.dto';
+import { Admin } from 'src/domain/entities/admin.entity';
 
 @Controller('admin')
 export class AdminController {
@@ -10,6 +11,7 @@ export class AdminController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get admin by ID' })
+  @ApiResponse({ status: 200, description: 'Admin retrieved successfully', type: Admin })
   async getAdminById(@Param('id') id: string) {
     const admin = await this.adminService.findById(id);
     if (!admin) {
@@ -20,6 +22,7 @@ export class AdminController {
 
   @Get()
   @ApiOperation({ summary: 'Get all admins' })
+  @ApiResponse({ status: 200, description: 'Admins retrieved successfully', type: [Admin] })
   async getAllAdmins() {
     const admins = await this.adminService.findAll();
     return { succeeded: true, message: 'Admins retrieved successfully', resultData: admins };
@@ -27,6 +30,7 @@ export class AdminController {
 
   @Get('username/:username')
   @ApiOperation({ summary: 'Get admin by username' })
+  @ApiResponse({ status: 200, description: 'Admin retrieved successfully', type: Admin })
   async getAdminByUsername(@Param('username') username: string) {
     const admin = await this.adminService.findByUsername(username);
     if (!admin) {
@@ -37,6 +41,7 @@ export class AdminController {
 
   @Post()
   @ApiOperation({ summary: 'Create admin' })
+  @ApiResponse({ status: 201, description: 'Admin created successfully', type: Admin })
   async createAdmin(@Body(new ValidationPipe()) adminData: CreateAdminDto) {
     const admin = await this.adminService.create(adminData);
     return { succeeded: true, message: 'Admin created successfully', resultData: admin };
@@ -44,6 +49,7 @@ export class AdminController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update admin' })
+  @ApiResponse({ status: 200, description: 'Admin updated successfully', type: Admin })
   async updateAdmin(@Param('id') id: string, @Body(new ValidationPipe()) adminData: Partial<UpdateAdminDto>) {
     const admin = await this.adminService.update(id, adminData);
     return { succeeded: true, message: 'Admin updated successfully', resultData: admin };
@@ -51,6 +57,7 @@ export class AdminController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete admin' })
+  @ApiResponse({ status: 200, description: 'Admin deleted successfully' })
   async deleteAdmin(@Param('id') id: string) {
     await this.adminService.delete(id);
     return { succeeded: true, message: 'Admin deleted successfully' };

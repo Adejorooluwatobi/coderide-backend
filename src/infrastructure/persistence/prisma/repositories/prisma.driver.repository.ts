@@ -11,23 +11,34 @@ import { DocumentStatus } from '../../../../domain/enums/document-status.enum';
 export class PrismaDriverRepository implements IDriverRepository {
   constructor(private prisma: PrismaService) {}
 
+  private static readonly INCLUDE_RELATIONS = {
+    user: true,
+    ownedVehicles: true,
+    vehicleAssignments: {
+      include: {
+        vehicle: true,
+      },
+    },
+    rides: true,
+  };
+
   async findById(id: string): Promise<Driver | null> {
-    const driver = await this.prisma.driver.findUnique({ where: { id } });
+    const driver = await this.prisma.driver.findUnique({ where: { id }, include: PrismaDriverRepository.INCLUDE_RELATIONS });
     return driver ? DriverMapper.toDomain(driver) : null;
   }
 
   async findAll(): Promise<Driver[]> {
-    const drivers = await this.prisma.driver.findMany();
+    const drivers = await this.prisma.driver.findMany({ include: PrismaDriverRepository.INCLUDE_RELATIONS });
     return drivers.map(DriverMapper.toDomain);
   }
 
   async findByUserId(userId: string): Promise<Driver | null> {
-    const driver = await this.prisma.driver.findUnique({ where: { userId } });
+    const driver = await this.prisma.driver.findUnique({ where: { userId }, include: PrismaDriverRepository.INCLUDE_RELATIONS });
     return driver ? DriverMapper.toDomain(driver) : null;
   }
 
   async findByLicenseNumber(licenseNumber: string): Promise<Driver | null> {
-    const driver = await this.prisma.driver.findUnique({ where: { licenseNumber } });
+    const driver = await this.prisma.driver.findUnique({ where: { licenseNumber }, include: PrismaDriverRepository.INCLUDE_RELATIONS });
     return driver ? DriverMapper.toDomain(driver) : null;
   }
 
@@ -44,6 +55,7 @@ export class PrismaDriverRepository implements IDriverRepository {
         totalEarnings: 0,
         isOnline: false,
       },
+      include: PrismaDriverRepository.INCLUDE_RELATIONS,
     });
     return DriverMapper.toDomain(driver);
   }
@@ -63,12 +75,13 @@ export class PrismaDriverRepository implements IDriverRepository {
         totalEarnings: 0,
         isOnline: false,
       },
+      include: PrismaDriverRepository.INCLUDE_RELATIONS,
     });
     return DriverMapper.toDomain(driver);
   }
 
   async update(id: string, params: Partial<UpdateDriverParams>): Promise<Driver> {
-    const driver = await this.prisma.driver.update({ where: { id }, data: params as Prisma.DriverUpdateInput });
+    const driver = await this.prisma.driver.update({ where: { id }, data: params as Prisma.DriverUpdateInput, include: PrismaDriverRepository.INCLUDE_RELATIONS });
     return DriverMapper.toDomain(driver);
   }
 

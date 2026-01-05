@@ -44,6 +44,10 @@ export class CreateRideDto {
   @IsNotEmpty()
   destinationAddress: string;
 
+  @IsEnum(RideStatus)
+  @IsOptional()
+  status?: RideStatus;
+
   @ApiProperty()
   @IsEnum(VehicleCategory)
   @IsNotEmpty()
@@ -52,5 +56,10 @@ export class CreateRideDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  promotionCode?: string; // Optional promo code
+  driverId?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  promotionCode?: string;
 }

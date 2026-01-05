@@ -11,18 +11,32 @@ import { UserType } from '../../../../domain/enums/user-type.enum';
 export class PrismaUserRepository implements IUserRepository {
   constructor(private prisma: PrismaService) {}
 
+  private static readonly INCLUDE_RELATIONS = {
+    rider: true,
+    driver: true,
+    paymentMethods: true,
+    notifications: true,
+    sentRatings: true,
+    receivedRatings: true,
+  };
+
   private mapUserTypeToPrisma(userType: UserType): PrismaUserType {
     return userType as PrismaUserType;
   }
 
   async findById(id: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({ where: { id } });
+    const user = await this.prisma.user.findUnique({ 
+      where: { id },
+      include: PrismaUserRepository.INCLUDE_RELATIONS
+    });
     return user ? UserMapper.toDomain(user) : null;
   }
 
   async findAll(): Promise<User[]> {
     try {
-      const users = await this.prisma.user.findMany();
+      const users = await this.prisma.user.findMany({
+        include: PrismaUserRepository.INCLUDE_RELATIONS
+      });
       return users.map(UserMapper.toDomain);
     } catch (error) {
       console.error('Error in PrismaUserRepository.findAll:', error);
@@ -31,7 +45,10 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ 
+      where: { email },
+      include: PrismaUserRepository.INCLUDE_RELATIONS
+    });
     return user ? UserMapper.toDomain(user) : null;
   }
 
@@ -41,7 +58,8 @@ export class PrismaUserRepository implements IUserRepository {
       data: { 
         ...rest, 
         userType: this.mapUserTypeToPrisma(userType) 
-      } 
+      },
+      include: PrismaUserRepository.INCLUDE_RELATIONS
     });
     return UserMapper.toDomain(user);
   }
@@ -53,7 +71,8 @@ export class PrismaUserRepository implements IUserRepository {
       data: { 
         ...rest, 
         ...(userType && { userType: this.mapUserTypeToPrisma(userType) }) 
-      } 
+      },
+      include: PrismaUserRepository.INCLUDE_RELATIONS
     });
     return UserMapper.toDomain(user);
   }

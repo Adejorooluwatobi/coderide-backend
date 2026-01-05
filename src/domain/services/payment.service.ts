@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Payment } from '../entities/payment.entity';
 import type { IPaymentRepository } from '../repositories/payment.repository.interface';
 import { CreatePaymentParams, UpdatePaymentParams } from 'src/utils/type';
+import { PaystackService } from 'src/infrastructure/external-services/paystack.service';
 
 @Injectable()
 export class PaymentService {
@@ -9,6 +10,7 @@ export class PaymentService {
   constructor(
     @Inject('IPaymentRepository')
     private readonly paymentRepository: IPaymentRepository,
+    private readonly paystackService: PaystackService,
   ) {}
 
   async findById(id: string): Promise<Payment | null> { 
@@ -51,6 +53,11 @@ export class PaymentService {
   async create(payment: CreatePaymentParams): Promise<Payment> {
     this.logger.log(`Creating payment with data: ${JSON.stringify(payment)}`);
     return this.paymentRepository.create(payment);
+  }
+
+  async initializePayment(userId: string, email: string, amount: number, rideId: string) {
+    this.logger.log(`Initializing payment for ride ${rideId}`);
+    return this.paystackService.initializeTransaction(email, amount * 100); // Paystack expects kobo
   }
 
   async update(id: string, payment: Partial<UpdatePaymentParams>): Promise<Payment> {

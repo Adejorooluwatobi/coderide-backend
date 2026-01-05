@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SurgeZone } from '../entities/surge-zone.entity';
 import type { ISurgeZoneRepository } from '../repositories/surge-zone.repository.interface';
 import { CreateSurgeZoneParams, UpdateSurgeZoneParams } from 'src/utils/type';
+import { isPointInPolygon } from 'geolib';
 
 @Injectable()
 export class SurgeZoneService {
@@ -27,6 +28,25 @@ export class SurgeZoneService {
   async findActiveSurgeZones(): Promise<SurgeZone[]> {
     this.logger.log('Fetching active surge zones');
     return this.surgeZoneRepository.findActiveSurgeZones();
+  }
+
+  async getSurgeMultiplier(latitude: number, longitude: number): Promise<number> {
+    const activeZones = await this.findActiveSurgeZones();
+    let maxMultiplier = 1.0;
+
+    for (const zone of activeZones) {
+      try {
+        if (isPointInPolygon({ latitude, longitude }, zone.polygon)) {
+          if (zone.multiplier > maxMultiplier) {
+            maxMultiplier = Number(zone.multiplier);
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Error checking surge zone ${zone.id}: ${error.message}`);
+      }
+    }
+
+    return maxMultiplier;
   }
 
   async create(surgeZone: CreateSurgeZoneParams): Promise<SurgeZone> {

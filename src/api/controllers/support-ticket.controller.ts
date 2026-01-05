@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException } from '@nestjs/common';
 import { SupportTicketService } from '../../domain/services/support-ticket.service';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateSupportTicketDto } from 'src/application/DTO/support-ticket/create-support-ticket.dto';
 import { UpdateSupportTicketDto } from 'src/application/DTO/support-ticket/update-support-ticket.dto';
 import { SupportTicket } from 'src/domain/entities/support-ticket.entity';
@@ -11,6 +11,7 @@ export class SupportTicketController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get support ticket by ID' })
+  @ApiResponse({ status: 200, description: 'Support ticket retrieved successfully', type: SupportTicket })
   async getById(@Param('id') id: string) {
     const ticket = await this.supportTicketService.findById(id);
     if (!ticket) throw new NotFoundException(`Support ticket with ID ${id} not found`);
@@ -19,6 +20,7 @@ export class SupportTicketController {
 
   @Get()
   @ApiOperation({ summary: 'Get all support tickets' })
+  @ApiResponse({ status: 200, description: 'Support tickets retrieved successfully', type: [SupportTicket] })
   async getAll() {
     const tickets = await this.supportTicketService.findAll();
     return { succeeded: true, message: 'Support tickets retrieved successfully', resultData: tickets };
@@ -26,6 +28,7 @@ export class SupportTicketController {
 
   @Get('user/:userId')
   @ApiOperation({ summary: 'Get tickets by user ID' })
+  @ApiResponse({ status: 200, description: 'Support tickets retrieved successfully', type: [SupportTicket] })
   async getByUserId(@Param('userId') userId: string) {
     const tickets = await this.supportTicketService.findByUserId(userId);
     return { succeeded: true, message: 'Support tickets retrieved successfully', resultData: tickets };
@@ -33,6 +36,7 @@ export class SupportTicketController {
 
   @Get('status/:status')
   @ApiOperation({ summary: 'Get tickets by status' })
+  @ApiResponse({ status: 200, description: 'Support tickets retrieved successfully', type: [SupportTicket] })
   async getByStatus(@Param('status') status: string) {
     const tickets = await this.supportTicketService.findByStatus(status);
     return { succeeded: true, message: 'Support tickets retrieved successfully', resultData: tickets };
@@ -40,6 +44,7 @@ export class SupportTicketController {
 
   @Post()
   @ApiOperation({ summary: 'Create support ticket' })
+  @ApiResponse({ status: 201, description: 'Support ticket created successfully', type: SupportTicket })
   async create(@Body(new ValidationPipe()) data: CreateSupportTicketDto) {
     const ticket = await this.supportTicketService.create(data as SupportTicket);
     return { succeeded: true, message: 'Support ticket created successfully', resultData: ticket };
@@ -47,6 +52,7 @@ export class SupportTicketController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update support ticket' })
+  @ApiResponse({ status: 200, description: 'Support ticket updated successfully', type: SupportTicket })
   async update(@Param('id') id: string, @Body(new ValidationPipe()) data: Partial<UpdateSupportTicketDto>) {
     const ticket = await this.supportTicketService.update(id, data);
     return { succeeded: true, message: 'Support ticket updated successfully', resultData: ticket };
@@ -54,6 +60,7 @@ export class SupportTicketController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete support ticket' })
+  @ApiResponse({ status: 200, description: 'Support ticket deleted successfully' })
   async delete(@Param('id') id: string) {
     await this.supportTicketService.delete(id);
     return { succeeded: true, message: 'Support ticket deleted successfully' };

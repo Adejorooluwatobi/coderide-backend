@@ -43,6 +43,8 @@ import { CreateVehicleAssignmentDto } from '../application/DTO/vehicle-assignmen
 import { UpdateVehicleAssignmentDto } from '../application/DTO/vehicle-assignment/update-vehicle-assignment.dto';
 import { CreateVehicleDto } from '../application/DTO/vehicle/create-vehicle.dto';
 import { UpdateVehicleDto } from '../application/DTO/vehicle/update-vehicle.dto';
+import { CreatePayoutDto } from '../application/DTO/payout/create-payout.dto';
+import { UpdatePayoutDto } from '../application/DTO/payout/update-payout.dto';
 
 // ============================================
 // STANDARD PARAMS (No JWT modification needed)
@@ -92,6 +94,9 @@ export type UpdateVehicleAssignmentParams = UpdateVehicleAssignmentDto;
 
 export type CreateVehicleParams = CreateVehicleDto;
 export type UpdateVehicleParams = UpdateVehicleDto;
+
+export type CreatePayoutParams = CreatePayoutDto;
+export type UpdatePayoutParams = UpdatePayoutDto;
 
 // ============================================
 // JWT-BASED PARAMS (userId added from JWT token)

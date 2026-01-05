@@ -1,9 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException } from '@nestjs/common';
 import { UserService } from '../../domain/services/user.service';
-import { ApiExtraModels, ApiOperation } from '@nestjs/swagger';
+import { ApiExtraModels, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserMapper } from 'src/infrastructure/mappers/user.mapper';
 import { CreateUserDto } from 'src/application/DTO/user/create-user.dto';
 import { UpdateUserDto } from 'src/application/DTO/user/update-user.dto';
+import { SecureUserResponseDto } from 'src/application/DTO/response';
 // REMOVED 'import * as bcrypt from 'bcrypt';' - Hashing is service logic
 
 @ApiExtraModels()
@@ -13,6 +14,7 @@ export class UserController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
+  @ApiResponse({ status: 200, description: 'User retrieved successfully', type: UserMapper })
   async getUserId(@Param('id') userId: string) {
     const user = await this.userService.findById(userId);
     // CORRECTED: Throw NotFoundException (404) for missing resources
@@ -29,6 +31,7 @@ export class UserController {
 
   @Get()
   @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({ status: 200, description: 'Users retrieved successfully', type: [SecureUserResponseDto] })
   async getAllUsers() {
     const users = await this.userService.findAll();
     const secureUsers = users.map(user => UserMapper.toSecureResponse(user));
@@ -68,6 +71,7 @@ export class UserController {
 
   @Get('email/:email')
   @ApiOperation({ summary: 'Get user by email' })
+  @ApiResponse({ status: 200, description: 'User retrieved successfully', type: UserMapper })
   async getUserByEmail(@Param('email') email: string) { 
     const user = await this.userService.findByEmail(email);
     // CORRECTED: Throw NotFoundException (404)
@@ -84,6 +88,7 @@ export class UserController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new user' })
+  @ApiResponse({ status: 201, description: 'User created successfully', type: SecureUserResponseDto })
   async createUser(@Body(new ValidationPipe()) userData: CreateUserDto) {
     // ALL BUSINESS/VALIDATION LOGIC REMOVED AND DELEGATED TO SERVICE
     // The service now handles: email/password existence, email format, email uniqueness, and password hashing.
@@ -110,6 +115,7 @@ export class UserController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update an existing user' })
+  @ApiResponse({ status: 200, description: 'User updated successfully', type: SecureUserResponseDto })
   async updateUser(@Param('id') userId: string, @Body(new ValidationPipe()) userData: Partial<UpdateUserDto>) {
     // Service handles the 'User not found' check and throws NotFoundException (404)
     const updatedUser = await this.userService.update(userId, userData);
@@ -124,6 +130,7 @@ export class UserController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a user' })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
   // CORRECTED: Added @Param('id') to get the ID from the URL
   async deleteUser(@Param('id') userId: string) {
     // Service handles the 'User not found' check and throws NotFoundException (404)
