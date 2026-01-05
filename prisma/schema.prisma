@@ -72,6 +72,8 @@ model Driver {
   vehicleAssignments VehicleAssignment[]
 
   @@index([latitude, longitude])
+  @@index([isOnline])
+  @@index([documentStatus])
 }
 
 model Admin {
@@ -161,10 +163,9 @@ model Ride {
   trackingPoints       RideTracking[]
   supportTickets       SupportTicket[]
 
-  @@index([status])
-  @@index([riderId])
-  @@index([driverId])
-  @@index([requestedAt])
+  @@index([status, riderId])
+  @@index([status, driverId])
+  @@index([requestedAt, status])
 }
 
 model Payment {
@@ -235,9 +236,7 @@ model Notification {
   createdAt DateTime         @default(now())
   user      User             @relation(fields: [userId], references: [id])
 
-  @@index([userId])
-  @@index([userId, isRead])
-  @@index([expiresAt])
+  @@index([userId, isRead, createdAt])
 }
 
 model Promotion {
@@ -295,9 +294,8 @@ model Earning {
   ride         Ride         @relation(fields: [rideId], references: [id])
   payout       Payout?      @relation(fields: [payoutId], references: [id])
 
-  @@index([driverId])
-  @@index([payoutStatus])
-  @@index([payoutId])
+  @@index([driverId, payoutStatus])
+  @@index([createdAt, payoutStatus])
 }
 
 model Payout {

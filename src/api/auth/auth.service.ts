@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -23,19 +23,31 @@ export class AuthService {
     private jwtService: JwtService,
     private userService: UserService,
     private adminService: AdminService,
-
   ) {
-    this.jwtSecret = this.configService.get('JWT_SECRET') || 'your_super_secret_jwt_key_change_in_production';
+    this.jwtSecret = this.configService.get('JWT_SECRET');
+    if (!this.jwtSecret || this.jwtSecret.length < 32) {
+      throw new Error('JWT_SECRET must be at least 32 characters long');
+    }
+  }
+
+  private validatePassword(password: string): void {
+    if (password.length < 8) {
+      throw new BadRequestException('Password must be at least 8 characters long');
+    }
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      throw new BadRequestException('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+    }
   }
 
   async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, 10);
+    this.validatePassword(password);
+    return bcrypt.hash(password, 12);
   }
 
   async registerUser(userData: CreateUserDto): Promise<void> {
     const existingUser = await this.userService.findByEmail(userData.email);
     if (existingUser) {
-      throw new Error('User already exists');
+      throw new BadRequestException('User already exists');
     }
     const hashedPassword = await this.hashPassword(userData.password);
     await this.userService.create({
@@ -80,7 +92,7 @@ export class AuthService {
   async registerAdmin(adminData: CreateAdminDto): Promise<void> {
     const existingAdmin = await this.adminService.findByUsername(adminData.username);
     if (existingAdmin) {
-      throw new Error('Admin already exists');
+      throw new BadRequestException('Admin already exists');
     }
     const hashedPassword = await this.hashPassword(adminData.password);
     await this.adminService.create({

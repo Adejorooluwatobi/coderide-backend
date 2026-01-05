@@ -1,10 +1,12 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './application/use-cases/app.service';
 import { FilesModule } from './shared/files/files.module';
 import { ConfigModule } from '@nestjs/config';
 import { LoggingMiddleware } from './shared/middleware/logging.middleware';
+import { SanitizationMiddleware } from './shared/middleware/sanitization.middleware';
+import { RequestIdMiddleware } from './shared/middleware/request-id.middleware';
 import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module';
 import { FastifyMulterModule } from '@nest-lab/fastify-multer';
 import { AdminModule } from './api/modules/admin.module';
@@ -32,8 +34,13 @@ import { RideTrackingModule } from './api/modules/ride-tracking.module';
 import { AuthModule } from './api/auth/auth.module';
 import { PayoutModule } from './api/modules/payout.module';
 import { PricingModule } from './api/modules/pricing.module';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './shared/guards/custom-throttler.guard';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bull';
+import { RedisService } from './shared/services/redis.service';
+import { RideTrackingGateway } from './shared/websockets/ride-tracking.gateway';
+import { ResponseTransformInterceptor } from './shared/interceptors/response-transform.interceptor';
+import { HealthController } from './api/controllers/health.controller';
 
 @Module({
   imports: [
@@ -86,17 +93,25 @@ import { BullModule } from '@nestjs/bull';
     VehicleModule,
     VehicleAssignmentModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseTransformInterceptor,
     },
     AppService,
+    RedisService,
+    RideTrackingGateway,
   ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggingMiddleware).forRoutes('*');
+    consumer
+      .apply(RequestIdMiddleware, SanitizationMiddleware, LoggingMiddleware)
+      .forRoutes('*');
   }
 }
