@@ -14,6 +14,7 @@ export class EarningMapper {
       netAmount: Number(prismaEarning.netAmount),
       payoutStatus: prismaEarning.payoutStatus as PayoutStatus,
       paidOutAt: prismaEarning.paidOutAt ?? undefined,
+      payoutId: prismaEarning.payoutId ?? undefined,
       createdAt: prismaEarning.createdAt,
       updatedAt: prismaEarning.updatedAt,
     });
@@ -29,6 +30,7 @@ export class EarningMapper {
       netAmount: new Decimal(earning.netAmount),
       payoutStatus: earning.payoutStatus,
       paidOutAt: earning.paidOutAt ?? null,
+      payoutId: earning.payoutId ?? null,
     };
   }
 }

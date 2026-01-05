@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException, UseGuards, Logger, BadRequestException } from '@nestjs/common';
 import { RideService } from '../../domain/services/ride.service';
 import { DriverService } from '../../domain/services/driver.service';
 import { ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
@@ -9,9 +9,12 @@ import { AdminGuard, DriverGuard, RiderGuard, UserGuard } from '../auth/guards';
 import { User } from 'src/shared/common/decorators/user.decorator';
 import { RiderService } from 'src/domain/services/rider.service';
 import { RideStatus } from '@prisma/client';
+import type { UserPayload } from 'src/shared/interfaces/user-payload.interface';
 
 @Controller('ride')
 export class RideController {
+  private readonly logger = new Logger(RideController.name);
+
   constructor(
     private readonly rideService: RideService,
     private readonly riderService: RiderService,
@@ -23,7 +26,7 @@ export class RideController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get ride by ID' })
   @ApiResponse({ status: 200, description: 'Ride retrieved successfully', type: Ride })
-  async getRideById(@Param('id') id: string, @User() user: any) {
+  async getRideById(@Param('id') id: string, @User() user: UserPayload) {
     const ride = await this.rideService.findById(id);
     if (!ride) {
       throw new NotFoundException(`Ride with ID ${id} not found`);
@@ -67,7 +70,7 @@ export class RideController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get rides for logged-in rider' })
   @ApiResponse({ status: 200, description: 'Rides retrieved successfully', type: [Ride] })
-  async getMyRiderRides(@User() user: any) {
+  async getMyRiderRides(@User() user: UserPayload) {
     const rider = await this.riderService.findByUserId(user.sub);
     if (!rider) {
       throw new NotFoundException('Rider profile not found');
@@ -81,7 +84,7 @@ export class RideController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get rides for logged-in driver' })
   @ApiResponse({ status: 200, description: 'Rides retrieved successfully', type: [Ride] })
-  async getMyDriverRides(@User() user: any) {
+  async getMyDriverRides(@User() user: UserPayload) {
     const driver = await this.driverService.findByUserId(user.sub);
     if (!driver) {
       throw new NotFoundException('Driver profile not found');
@@ -103,7 +106,7 @@ export class RideController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create ride' })
   @ApiResponse({ status: 201, description: 'Ride created successfully', type: Ride })
-  async createRide(@Body(new ValidationPipe()) rideData: CreateRideDto, @User() user: any) {
+  async createRide(@Body(new ValidationPipe()) rideData: CreateRideDto, @User() user: UserPayload) {
     const rider = await this.riderService.findByUserId(user.sub);
     if (!rider) {
       throw new NotFoundException(`Rider for user ${user.sub} not found`);
@@ -127,8 +130,8 @@ export class RideController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update ride status' })
   @ApiResponse({ status: 200, description: 'Ride status updated successfully', type: Ride })
-  async updateRideStatus(@Param('id') id: string, @Body(new ValidationPipe()) rideData: Partial<UpdateRideDto> | string, @User() user: any) {
-    console.log(`[RideController] updateRideStatus called for id: ${id}`);
+  async updateRideStatus(@Param('id') id: string, @Body(new ValidationPipe()) rideData: UpdateRideDto, @User() user: UserPayload) {
+    this.logger.log(`updateRideStatus called for id: ${id}`);
     
     // access control: only the assigned driver can update status
     const driver = await this.driverService.findByUserId(user.sub);
@@ -145,22 +148,14 @@ export class RideController {
        throw new NotFoundException('Ride not found or access denied');
     }
 
-    let parsedData: Partial<UpdateRideDto>;
-    if (typeof rideData === 'string') {
-      console.log('[RideController] rideData is a string, parsing...');
-      try {
-        parsedData = JSON.parse(rideData);
-      } catch (error) {
-        throw new Error('Invalid JSON body');
-      }
-    } else {
-      parsedData = rideData;
+    if (!rideData.status) {
+       throw new BadRequestException('Status is required');
     }
     
-    console.log(`[RideController] Payload received: ${JSON.stringify(parsedData)}`);
-    console.log(`[RideController] Status to update: ${parsedData.status}`);
+    this.logger.log(`Payload received: ${JSON.stringify(rideData)}`);
+    this.logger.log(`Status to update: ${rideData.status}`);
     
-    const updatedRide = await this.rideService.updateStatus(id, parsedData.status as RideStatus);
+    const updatedRide = await this.rideService.updateStatus(id, rideData.status as RideStatus);
     return { succeeded: true, message: 'Ride status updated successfully', resultData: updatedRide };
   }
 

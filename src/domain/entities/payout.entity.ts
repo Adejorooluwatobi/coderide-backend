@@ -1,10 +1,10 @@
 import { BaseEntity } from './base.entity';
 import { Driver } from './driver.entity';
-import { Ride } from './ride.entity';
+import { Earning } from './earning.entity';
 import { PayoutStatus } from '../enums/payout-status.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class Earning extends BaseEntity {
+export class Payout extends BaseEntity {
     @ApiProperty()
     driver: Driver;
 
@@ -12,30 +12,21 @@ export class Earning extends BaseEntity {
     driverId: string;
 
     @ApiProperty()
-    ride: Ride;
+    amount: number;
 
     @ApiProperty()
-    rideId: string;
+    status: PayoutStatus;
 
     @ApiProperty()
-    grossAmount: number;
+    transferReference?: string;
 
     @ApiProperty()
-    platformFee: number;
+    processedAt?: Date;
 
-    @ApiProperty()
-    netAmount: number;
+    @ApiProperty({ type: () => [Earning] })
+    earnings: Earning[];
 
-    @ApiProperty()
-    payoutStatus: PayoutStatus;
-
-    @ApiProperty()
-    paidOutAt?: Date;
-
-    @ApiProperty()
-    payoutId?: string;
-
-    constructor(data: Partial<Earning>) {
+    constructor(data: Partial<Payout>) {
         super();
         Object.assign(this, data);
     }

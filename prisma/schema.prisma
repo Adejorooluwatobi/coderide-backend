@@ -66,6 +66,7 @@ model Driver {
   documents          DriverDocument[]
   schedules          DriverSchedule[]
   earnings           Earning[]
+  payouts            Payout[]
   rides              Ride[]
   ownedVehicles      Vehicle[]           @relation("OwnedVehicles")
   vehicleAssignments VehicleAssignment[]
@@ -282,6 +283,7 @@ model Earning {
   id           String       @id @default(uuid())
   driverId     String
   rideId       String       @unique
+  payoutId     String?
   grossAmount  Decimal
   platformFee  Decimal
   netAmount    Decimal
@@ -291,9 +293,27 @@ model Earning {
   updatedAt    DateTime     @updatedAt
   driver       Driver       @relation(fields: [driverId], references: [id])
   ride         Ride         @relation(fields: [rideId], references: [id])
+  payout       Payout?      @relation(fields: [payoutId], references: [id])
 
   @@index([driverId])
   @@index([payoutStatus])
+  @@index([payoutId])
+}
+
+model Payout {
+  id               String       @id @default(uuid())
+  driverId         String
+  amount           Decimal
+  status           PayoutStatus @default(PENDING)
+  transferReference String?     @unique
+  processedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  earnings         Earning[]
+  driver           Driver       @relation(fields: [driverId], references: [id])
+
+  @@index([driverId])
+  @@index([status])
 }
 
 model FareEstimate {

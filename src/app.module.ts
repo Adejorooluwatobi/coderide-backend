@@ -29,6 +29,7 @@ import { UserModule } from './api/modules/user.module';
 import { ReferralModule } from './api/modules/referral.module';
 import { RideTrackingModule } from './api/modules/ride-tracking.module';
 import { AuthModule } from './api/auth/auth.module';
+import { PayoutModule } from './api/modules/payout.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { AuthModule } from './api/auth/auth.module';
     NotificationModule,
     PaymentMethodModule,
     PaymentModule,
+    PayoutModule,
     PromotionUsageModule,
     PromotionModule,
     RatingModule,

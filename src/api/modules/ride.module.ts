@@ -7,9 +7,11 @@ import { RiderModule } from './rider.module';
 import { JwtModule } from '@nestjs/jwt';
 import { NotificationModule } from './notification.module';
 import { DriverModule } from './driver.module';
+import { EarningModule } from './earning.module';
+import { SurgeZoneModule } from './surge-zone.module';
 
 @Module({
-  imports: [PrismaModule, RiderModule, JwtModule, NotificationModule, DriverModule],
+  imports: [PrismaModule, RiderModule, JwtModule, NotificationModule, DriverModule, EarningModule, SurgeZoneModule],
   controllers: [RideController],
   providers: [
     RideService,
