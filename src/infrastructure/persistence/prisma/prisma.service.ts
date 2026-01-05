@@ -17,13 +17,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleInit() {
-    this.$on('query', (e) => {
+    (this as any).$on('query', (e: any) => {
       if (process.env.NODE_ENV === 'development') {
         this.logger.debug(`Query: ${e.query} - Duration: ${e.duration}ms`);
       }
     });
 
-    this.$on('error', (e) => {
+    (this as any).$on('error', (e: any) => {
       this.logger.error('Prisma Error:', e);
     });
 
@@ -39,15 +39,5 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleDestroy() {
     await this.$disconnect();
     this.logger.log('Disconnected from database');
-  }
-
-  async enableShutdownHooks(app: any) {
-    this.$on('beforeExit', async () => {
-      try {
-        await app.close();
-      } catch (error) {
-        this.logger.error('Error during application shutdown:', error);
-      }
-    });
   }
 }

@@ -24,9 +24,17 @@ export class AuthService {
     private userService: UserService,
     private adminService: AdminService,
   ) {
-    this.jwtSecret = this.configService.get('JWT_SECRET');
-    if (!this.jwtSecret || this.jwtSecret.length < 32) {
-      throw new Error('JWT_SECRET must be at least 32 characters long');
+    const secret = this.configService.get<string>('JWT_SECRET');
+    const isProd = this.configService.get('NODE_ENV') === 'production';
+
+    if (!secret || secret.length < 32) {
+      if (isProd) {
+        throw new Error('JWT_SECRET must be at least 32 characters long in production');
+      }
+      this.logger.warn('JWT_SECRET is missing or too short. Using mock secret for development.');
+      this.jwtSecret = 'a_very_long_mock_secret_for_development_purposes_only_32_chars';
+    } else {
+      this.jwtSecret = secret;
     }
   }
 

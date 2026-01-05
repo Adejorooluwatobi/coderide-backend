@@ -1,1 +1,19 @@
-import { Injectable } from '@nestjs/common';\nimport { ThrottlerGuard } from '@nestjs/throttler';\nimport { ExecutionContext } from '@nestjs/common';\n\n@Injectable()\nexport class CustomThrottlerGuard extends ThrottlerGuard {\n  protected getTracker(req: Record<string, any>): string {\n    // Use IP + User ID for authenticated requests\n    const userId = req.user?.sub;\n    const ip = req.ip || req.connection.remoteAddress;\n    return userId ? `${ip}-${userId}` : ip;\n  }\n\n  protected async shouldSkip(context: ExecutionContext): Promise<boolean> {\n    const request = context.switchToHttp().getRequest();\n    // Skip rate limiting for health checks\n    return request.url === '/health';\n  }\n}\n
+import { Injectable } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { ExecutionContext } from '@nestjs/common';
+
+@Injectable()
+export class CustomThrottlerGuard extends ThrottlerGuard {
+  protected getTracker(req: Record<string, any>): Promise<string> {
+    // Use IP + User ID for authenticated requests
+    const userId = req.user?.sub;
+    const ip = req.ip || req.connection.remoteAddress;
+    return Promise.resolve(userId ? `${ip}-${userId}` : ip);
+  }
+
+  protected async shouldSkip(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    // Skip rate limiting for health checks
+    return request.url === '/health';
+  }
+}

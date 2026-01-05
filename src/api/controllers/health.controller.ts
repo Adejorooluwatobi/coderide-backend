@@ -1,1 +1,56 @@
-import { Controller, Get } from '@nestjs/common';\nimport { ApiTags, ApiOperation } from '@nestjs/swagger';\nimport { PrismaService } from 'src/infrastructure/persistence/prisma/prisma.service';\nimport { RedisService } from 'src/shared/services/redis.service';\n\n@ApiTags('Health')\n@Controller('health')\nexport class HealthController {\n  constructor(\n    private prismaService: PrismaService,\n    private redisService: RedisService,\n  ) {}\n\n  @Get()\n  @ApiOperation({ summary: 'Health check' })\n  async getHealth() {\n    const checks = {\n      database: await this.checkDatabase(),\n      redis: await this.checkRedis(),\n      timestamp: new Date().toISOString(),\n      uptime: process.uptime(),\n      memory: process.memoryUsage(),\n    };\n\n    const isHealthy = Object.values(checks).every(\n      (check) => typeof check === 'object' ? check.status === 'ok' : true\n    );\n\n    return {\n      status: isHealthy ? 'ok' : 'error',\n      checks,\n    };\n  }\n\n  private async checkDatabase() {\n    try {\n      await this.prismaService.$queryRaw`SELECT 1`;\n      return { status: 'ok', message: 'Database connection successful' };\n    } catch (error) {\n      return { status: 'error', message: error.message };\n    }\n  }\n\n  private async checkRedis() {\n    try {\n      await this.redisService.set('health-check', 'ok', 10);\n      const result = await this.redisService.get('health-check');\n      return { \n        status: result === 'ok' ? 'ok' : 'error', \n        message: 'Redis connection successful' \n      };\n    } catch (error) {\n      return { status: 'error', message: error.message };\n    }\n  }\n}\n
+import { Controller, Get } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { PrismaService } from 'src/infrastructure/persistence/prisma/prisma.service';
+import { RedisService } from 'src/shared/services/redis.service';
+
+@ApiTags('Health')
+@Controller('health')
+export class HealthController {
+  constructor(
+    private prismaService: PrismaService,
+    private redisService: RedisService,
+  ) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Health check' })
+  async getHealth() {
+    const checks = {
+      database: await this.checkDatabase(),
+      redis: await this.checkRedis(),
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+    };
+
+    const isHealthy = 
+      checks.database.status === 'ok' && 
+      checks.redis.status === 'ok';
+
+    return {
+      status: isHealthy ? 'ok' : 'error',
+      checks,
+    };
+  }
+
+  private async checkDatabase() {
+    try {
+      await this.prismaService.$queryRaw`SELECT 1`;
+      return { status: 'ok', message: 'Database connection successful' };
+    } catch (error) {
+      return { status: 'error', message: error.message };
+    }
+  }
+
+  private async checkRedis() {
+    try {
+      await this.redisService.set('health-check', 'ok', 10);
+      const result = await this.redisService.get('health-check');
+      return { 
+        status: result === 'ok' ? 'ok' : 'error', 
+        message: 'Redis connection successful' 
+      };
+    } catch (error) {
+      return { status: 'error', message: error.message };
+    }
+  }
+}

@@ -1,1 +1,25 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';\nimport { Observable } from 'rxjs';\nimport { map } from 'rxjs/operators';\nimport { ApiResponse } from '../interfaces/api-response.interface';\n\n@Injectable()\nexport class ResponseTransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {\n  intercept(context: ExecutionContext, next: CallHandler): Observable<ApiResponse<T>> {\n    return next.handle().pipe(\n      map((data) => {\n        // If data is already in ApiResponse format, return as is\n        if (data && typeof data === 'object' && 'succeeded' in data) {\n          return data;\n        }\n\n        // Transform raw data into ApiResponse format\n        return {\n          succeeded: true,\n          message: 'Request completed successfully',\n          resultData: data,\n        };\n      }),\n    );\n  }\n}\n
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ApiResponse } from '../interfaces/api-response.interface';
+
+@Injectable()
+export class ResponseTransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<ApiResponse<T>> {
+    return next.handle().pipe(
+      map((data) => {
+        // If data is already in ApiResponse format, return as is
+        if (data && typeof data === 'object' && 'succeeded' in data) {
+          return data;
+        }
+
+        // Transform raw data into ApiResponse format
+        return {
+          succeeded: true,
+          message: 'Request completed successfully',
+          resultData: data,
+        };
+      }),
+    );
+  }
+}

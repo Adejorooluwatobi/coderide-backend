@@ -1,1 +1,33 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';\nimport { PaginationParams } from '../interfaces/api-response.interface';\n\nexport const Pagination = createParamDecorator(\n  (data: unknown, ctx: ExecutionContext): PaginationParams => {\n    const request = ctx.switchToHttp().getRequest();\n    const { page = 1, limit = 10, sortBy, sortOrder = 'desc' } = request.query;\n\n    return {\n      page: Math.max(1, parseInt(page as string, 10)),\n      limit: Math.min(100, Math.max(1, parseInt(limit as string, 10))),\n      sortBy: sortBy as string,\n      sortOrder: sortOrder as 'asc' | 'desc',\n    };\n  },\n);\n\nexport function createPaginatedResponse<T>(\n  data: T[],\n  total: number,\n  page: number,\n  limit: number,\n) {\n  return {\n    data,\n    pagination: {\n      page,\n      limit,\n      total,\n      totalPages: Math.ceil(total / limit),\n    },\n  };\n}\n
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { PaginationParams } from '../interfaces/api-response.interface';
+
+export const Pagination = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext): PaginationParams => {
+    const request = ctx.switchToHttp().getRequest();
+    const { page = 1, limit = 10, sortBy, sortOrder = 'desc' } = request.query;
+
+    return {
+      page: Math.max(1, parseInt(page as string, 10)),
+      limit: Math.min(100, Math.max(1, parseInt(limit as string, 10))),
+      sortBy: sortBy as string,
+      sortOrder: sortOrder as 'asc' | 'desc',
+    };
+  },
+);
+
+export function createPaginatedResponse<T>(
+  data: T[],
+  total: number,
+  page: number,
+  limit: number,
+) {
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}

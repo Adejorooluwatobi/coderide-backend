@@ -1,1 +1,148 @@
-import {\n  WebSocketGateway,\n  WebSocketServer,\n  SubscribeMessage,\n  OnGatewayConnection,\n  OnGatewayDisconnect,\n  MessageBody,\n  ConnectedSocket,\n} from '@nestjs/websockets';\nimport { Server, Socket } from 'socket.io';\nimport { Logger, UseGuards } from '@nestjs/common';\nimport { JwtService } from '@nestjs/jwt';\nimport { RideTrackingService } from 'src/domain/services/ride-tracking.service';\n\n@WebSocketGateway({\n  cors: {\n    origin: '*',\n  },\n  namespace: '/ride-tracking',\n})\nexport class RideTrackingGateway implements OnGatewayConnection, OnGatewayDisconnect {\n  @WebSocketServer()\n  server: Server;\n\n  private readonly logger = new Logger(RideTrackingGateway.name);\n  private connectedUsers = new Map<string, string>(); // socketId -> userId\n  private userSockets = new Map<string, string>(); // userId -> socketId\n\n  constructor(\n    private jwtService: JwtService,\n    private rideTrackingService: RideTrackingService,\n  ) {}\n\n  async handleConnection(client: Socket) {\n    try {\n      const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];\n      \n      if (!token) {\n        client.disconnect();\n        return;\n      }\n\n      const payload = this.jwtService.verify(token);\n      const userId = payload.sub;\n\n      this.connectedUsers.set(client.id, userId);\n      this.userSockets.set(userId, client.id);\n\n      client.join(`user:${userId}`);\n      \n      this.logger.log(`User ${userId} connected with socket ${client.id}`);\n    } catch (error) {\n      this.logger.error('WebSocket connection error:', error);\n      client.disconnect();\n    }\n  }\n\n  handleDisconnect(client: Socket) {\n    const userId = this.connectedUsers.get(client.id);\n    if (userId) {\n      this.connectedUsers.delete(client.id);\n      this.userSockets.delete(userId);\n      this.logger.log(`User ${userId} disconnected`);\n    }\n  }\n\n  @SubscribeMessage('join-ride')\n  async handleJoinRide(\n    @MessageBody() data: { rideId: string },\n    @ConnectedSocket() client: Socket,\n  ) {\n    const userId = this.connectedUsers.get(client.id);\n    if (!userId) return;\n\n    client.join(`ride:${data.rideId}`);\n    this.logger.log(`User ${userId} joined ride ${data.rideId}`);\n  }\n\n  @SubscribeMessage('leave-ride')\n  async handleLeaveRide(\n    @MessageBody() data: { rideId: string },\n    @ConnectedSocket() client: Socket,\n  ) {\n    const userId = this.connectedUsers.get(client.id);\n    if (!userId) return;\n\n    client.leave(`ride:${data.rideId}`);\n    this.logger.log(`User ${userId} left ride ${data.rideId}`);\n  }\n\n  @SubscribeMessage('location-update')\n  async handleLocationUpdate(\n    @MessageBody() data: {\n      rideId: string;\n      latitude: number;\n      longitude: number;\n      speed?: number;\n      heading?: number;\n    },\n    @ConnectedSocket() client: Socket,\n  ) {\n    const userId = this.connectedUsers.get(client.id);\n    if (!userId) return;\n\n    try {\n      // Save tracking point to database\n      await this.rideTrackingService.create({\n        rideId: data.rideId,\n        latitude: data.latitude,\n        longitude: data.longitude,\n        speed: data.speed,\n        heading: data.heading,\n      });\n\n      // Broadcast to all users in the ride\n      this.server.to(`ride:${data.rideId}`).emit('location-updated', {\n        rideId: data.rideId,\n        latitude: data.latitude,\n        longitude: data.longitude,\n        speed: data.speed,\n        heading: data.heading,\n        timestamp: new Date().toISOString(),\n      });\n    } catch (error) {\n      this.logger.error('Location update error:', error);\n    }\n  }\n\n  // Emit ride status updates\n  emitRideStatusUpdate(rideId: string, status: string, data?: any) {\n    this.server.to(`ride:${rideId}`).emit('ride-status-updated', {\n      rideId,\n      status,\n      data,\n      timestamp: new Date().toISOString(),\n    });\n  }\n\n  // Emit notifications to specific user\n  emitNotificationToUser(userId: string, notification: any) {\n    const socketId = this.userSockets.get(userId);\n    if (socketId) {\n      this.server.to(socketId).emit('notification', notification);\n    }\n  }\n}\n
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  SubscribeMessage,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  MessageBody,
+  ConnectedSocket,
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import { Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { RideTrackingService } from 'src/domain/services/ride-tracking.service';
+
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
+  namespace: '/ride-tracking',
+})
+export class RideTrackingGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  @WebSocketServer()
+  server: Server;
+
+  private readonly logger = new Logger(RideTrackingGateway.name);
+  private connectedUsers = new Map<string, string>(); // socketId -> userId
+  private userSockets = new Map<string, string>(); // userId -> socketId
+
+  constructor(
+    private jwtService: JwtService,
+    private rideTrackingService: RideTrackingService,
+  ) {}
+
+  async handleConnection(client: Socket) {
+    try {
+      const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
+      
+      if (!token) {
+        this.logger.warn(`Client ${client.id} attempted to connect without token`);
+        client.disconnect();
+        return;
+      }
+
+      const payload = this.jwtService.verify(token);
+      const userId = payload.sub;
+
+      this.connectedUsers.set(client.id, userId);
+      this.userSockets.set(userId, client.id);
+
+      client.join(`user:${userId}`);
+      
+      this.logger.log(`User ${userId} connected with socket ${client.id}`);
+    } catch (error) {
+      this.logger.error(`WebSocket connection error for client ${client.id}:`, error.message);
+      client.disconnect();
+    }
+  }
+
+  handleDisconnect(client: Socket) {
+    const userId = this.connectedUsers.get(client.id);
+    if (userId) {
+      this.connectedUsers.delete(client.id);
+      this.userSockets.delete(userId);
+      this.logger.log(`User ${userId} disconnected`);
+    }
+  }
+
+  @SubscribeMessage('join-ride')
+  async handleJoinRide(
+    @MessageBody() data: { rideId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = this.connectedUsers.get(client.id);
+    if (!userId) return;
+
+    client.join(`ride:${data.rideId}`);
+    this.logger.log(`User ${userId} joined ride ${data.rideId}`);
+  }
+
+  @SubscribeMessage('leave-ride')
+  async handleLeaveRide(
+    @MessageBody() data: { rideId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = this.connectedUsers.get(client.id);
+    if (!userId) return;
+
+    client.leave(`ride:${data.rideId}`);
+    this.logger.log(`User ${userId} left ride ${data.rideId}`);
+  }
+
+  @SubscribeMessage('location-update')
+  async handleLocationUpdate(
+    @MessageBody() data: {
+      rideId: string;
+      latitude: number;
+      longitude: number;
+      speed?: number;
+      heading?: number;
+    },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = this.connectedUsers.get(client.id);
+    if (!userId) return;
+
+    try {
+      // Save tracking point to database
+      await this.rideTrackingService.create({
+        rideId: data.rideId,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        speed: data.speed,
+        heading: data.heading,
+        timestamp: new Date(),
+      });
+
+      // Broadcast to all users in the ride
+      this.server.to(`ride:${data.rideId}`).emit('location-updated', {
+        rideId: data.rideId,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        speed: data.speed,
+        heading: data.heading,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      this.logger.error('Location update error:', error);
+    }
+  }
+
+  // Emit ride status updates
+  emitRideStatusUpdate(rideId: string, status: string, data?: any) {
+    this.server.to(`ride:${rideId}`).emit('ride-status-updated', {
+      rideId,
+      status,
+      data,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // Emit notifications to specific user
+  emitNotificationToUser(userId: string, notification: any) {
+    const socketId = this.userSockets.get(userId);
+    if (socketId) {
+      this.server.to(socketId).emit('notification', notification);
+    }
+  }
+}

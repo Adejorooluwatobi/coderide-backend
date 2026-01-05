@@ -3,7 +3,7 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './application/use-cases/app.service';
 import { FilesModule } from './shared/files/files.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggingMiddleware } from './shared/middleware/logging.middleware';
 import { SanitizationMiddleware } from './shared/middleware/sanitization.middleware';
 import { RequestIdMiddleware } from './shared/middleware/request-id.middleware';
@@ -38,7 +38,6 @@ import { CustomThrottlerGuard } from './shared/guards/custom-throttler.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bull';
 import { RedisService } from './shared/services/redis.service';
-import { RideTrackingGateway } from './shared/websockets/ride-tracking.gateway';
 import { ResponseTransformInterceptor } from './shared/interceptors/response-transform.interceptor';
 import { HealthController } from './api/controllers/health.controller';
 
@@ -56,11 +55,16 @@ import { HealthController } from './api/controllers/health.controller';
       envFilePath: '.env',
       ignoreEnvFile: false,
     }),
-    BullModule.forRoot({
-      redis: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      },
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        redis: {
+          host: config.get('REDIS_HOST', '127.0.0.1'),
+          port: parseInt(config.get('REDIS_PORT', '6379'), 10),
+          password: config.get('REDIS_PASSWORD'),
+          maxRetriesPerRequest: null,
+        },
+      }),
     }),
     ThrottlerModule.forRoot([{
       ttl: 60000, // 1 minute
@@ -105,7 +109,6 @@ import { HealthController } from './api/controllers/health.controller';
     },
     AppService,
     RedisService,
-    RideTrackingGateway,
   ],
 })
 export class AppModule implements NestModule {

@@ -1,1 +1,80 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';\nimport { ConfigService } from '@nestjs/config';\nimport { createClient, RedisClientType } from 'redis';\n\n@Injectable()\nexport class RedisService implements OnModuleDestroy {\n  private readonly logger = new Logger(RedisService.name);\n  private client: RedisClientType;\n\n  constructor(private configService: ConfigService) {\n    this.client = createClient({\n      socket: {\n        host: this.configService.get('REDIS_HOST', 'localhost'),\n        port: this.configService.get('REDIS_PORT', 6379),\n      },\n      password: this.configService.get('REDIS_PASSWORD'),\n    });\n\n    this.client.on('error', (err) => {\n      this.logger.error('Redis Client Error', err);\n    });\n\n    this.client.connect().catch((err) => {\n      this.logger.error('Failed to connect to Redis', err);\n    });\n  }\n\n  async get(key: string): Promise<string | null> {\n    try {\n      return await this.client.get(key);\n    } catch (error) {\n      this.logger.error(`Redis GET error for key ${key}`, error);\n      return null;\n    }\n  }\n\n  async set(key: string, value: string, ttl?: number): Promise<void> {\n    try {\n      if (ttl) {\n        await this.client.setEx(key, ttl, value);\n      } else {\n        await this.client.set(key, value);\n      }\n    } catch (error) {\n      this.logger.error(`Redis SET error for key ${key}`, error);\n    }\n  }\n\n  async del(key: string): Promise<void> {\n    try {\n      await this.client.del(key);\n    } catch (error) {\n      this.logger.error(`Redis DEL error for key ${key}`, error);\n    }\n  }\n\n  async exists(key: string): Promise<boolean> {\n    try {\n      return (await this.client.exists(key)) === 1;\n    } catch (error) {\n      this.logger.error(`Redis EXISTS error for key ${key}`, error);\n      return false;\n    }\n  }\n\n  onModuleDestroy() {\n    this.client.quit();\n  }\n}\n
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createClient, RedisClientType } from 'redis';
+
+@Injectable()
+export class RedisService implements OnModuleDestroy {
+  private readonly logger = new Logger(RedisService.name);
+  private client: RedisClientType;
+
+  constructor(private configService: ConfigService) {
+    const redisHost = this.configService.get('REDIS_HOST');
+    
+    // Only create Redis client if explicitly configured
+    if (redisHost && redisHost !== 'localhost') {
+      this.client = createClient({
+        socket: {
+          host: redisHost,
+          port: parseInt(this.configService.get('REDIS_PORT', '6379'), 10),
+        },
+        password: this.configService.get('REDIS_PASSWORD'),
+      });
+
+      this.client.on('error', (err) => {
+        this.logger.error('Redis Client Error', err);
+      });
+
+      this.client.connect().catch((err) => {
+        this.logger.error('Failed to connect to Redis', err);
+      });
+    } else {
+      this.logger.log('Redis not configured. Running without cache.');
+    }
+  }
+
+  async get(key: string): Promise<string | null> {
+    if (!this.client) return null;
+    try {
+      return await this.client.get(key);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async set(key: string, value: string, ttl?: number): Promise<void> {
+    if (!this.client) return;
+    try {
+      if (ttl) {
+        await this.client.setEx(key, ttl, value);
+      } else {
+        await this.client.set(key, value);
+      }
+    } catch (error) {
+      // Silently fail in development
+    }
+  }
+
+  async del(key: string): Promise<void> {
+    if (!this.client) return;
+    try {
+      await this.client.del(key);
+    } catch (error) {
+      // Silently fail in development
+    }
+  }
+
+  async exists(key: string): Promise<boolean> {
+    if (!this.client) return false;
+    try {
+      return (await this.client.exists(key)) === 1;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  onModuleDestroy() {
+    if (this.client) {
+      this.client.quit();
+    }
+  }
+}

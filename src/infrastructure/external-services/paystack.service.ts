@@ -9,9 +9,17 @@ export class PaystackService {
   private readonly secretKey: string;
 
   constructor(private configService: ConfigService) {
-    this.secretKey = this.configService.get('PAYSTACK_SECRET_KEY');
-    if (!this.secretKey) {
-      throw new Error('PAYSTACK_SECRET_KEY is required');
+    const key = this.configService.get<string>('PAYSTACK_SECRET_KEY');
+    const isProd = this.configService.get('NODE_ENV') === 'production';
+
+    if (!key) {
+      if (isProd) {
+        throw new Error('PAYSTACK_SECRET_KEY is required in production');
+      }
+      this.logger.warn('PAYSTACK_SECRET_KEY is missing. Using mock key for development.');
+      this.secretKey = 'sk_test_mock_key_for_development_purposes_only';
+    } else {
+      this.secretKey = key;
     }
   }
 
