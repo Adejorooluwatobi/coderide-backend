@@ -13,6 +13,11 @@ yarn-error.log*
 lerna-debug.log*
 *.txt
 
+# Documentation & Temporary Files
+*.md
+!README.md
+!CHANGELOG.md
+
 # OS
 .DS_Store
 
