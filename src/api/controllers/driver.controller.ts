@@ -4,6 +4,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateDriverApplicationDto } from 'src/application/DTO/driver/create-driver-application.dto';
 import { CreateCompanyDriverDto } from 'src/application/DTO/driver/create-company-driver.dto';
 import { UpdateDriverDto } from 'src/application/DTO/driver/update-driver.dto';
+import { UpdateStatusDto } from 'src/application/DTO/common/update-status.dto';
 import { User } from 'src/shared/common/decorators/user.decorator';
 import { UserGuard } from '../auth/guards';
 import { Driver } from 'src/domain/entities/driver.entity';
@@ -104,6 +105,18 @@ export class DriverController {
     return {
       succeeded: true,
       message: 'Driver updated successfully',
+      resultData: driver
+    };
+  }
+
+  @Put(':id/status')
+  @ApiOperation({ summary: 'Update driver status' })
+  @ApiResponse({ status: 200, description: 'Driver status updated successfully', type: Driver })
+  async updateStatus(@Param('id') id: string, @Body(new ValidationPipe()) statusData: UpdateStatusDto) {
+    const driver = await this.driverService.updateStatus(id, statusData.status);
+    return {
+      succeeded: true,
+      message: 'Driver status updated successfully',
       resultData: driver
     };
   }

@@ -4,6 +4,7 @@ import { PaymentMethod } from "./payment-method.entity";
 import { Ride } from "./ride.entity";
 import { Payment } from "./payment.entity";
 import { ApiProperty } from "@nestjs/swagger";
+import { RiderStatus } from "../enums/rider-status.enum";
 
 export class Rider extends BaseEntity {
     @ApiProperty()
@@ -17,6 +18,9 @@ export class Rider extends BaseEntity {
 
     @ApiProperty()
     totalRides?: number;
+
+    @ApiProperty()
+    status?: RiderStatus;
 
     @ApiProperty()
     defaultPaymentMethodId?: string;

@@ -3,6 +3,7 @@ import { AdminService } from '../../domain/services/admin.service';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateAdminDto } from 'src/application/DTO/admin/create-admin.dto';
 import { UpdateAdminDto } from 'src/application/DTO/admin/update-admin.dto';
+import { UpdateStatusDto } from 'src/application/DTO/common/update-status.dto';
 import { Admin } from 'src/domain/entities/admin.entity';
 
 @Controller('admin')
@@ -53,6 +54,14 @@ export class AdminController {
   async updateAdmin(@Param('id') id: string, @Body(new ValidationPipe()) adminData: Partial<UpdateAdminDto>) {
     const admin = await this.adminService.update(id, adminData);
     return { succeeded: true, message: 'Admin updated successfully', resultData: admin };
+  }
+
+  @Put(':id/status')
+  @ApiOperation({ summary: 'Update admin status' })
+  @ApiResponse({ status: 200, description: 'Admin status updated successfully', type: Admin })
+  async updateStatus(@Param('id') id: string, @Body(new ValidationPipe()) statusData: UpdateStatusDto) {
+    const admin = await this.adminService.updateStatus(id, statusData.status);
+    return { succeeded: true, message: 'Admin status updated successfully', resultData: admin };
   }
 
   @Delete(':id')

@@ -35,6 +35,14 @@ export class PrismaAdminRepository implements IAdminRepository {
     return AdminMapper.toDomain(admin);
   }
 
+  async updateStatus(id: string, status: string): Promise<Admin> {
+    const admin = await this.prisma.admin.update({
+      where: { id },
+      data: { status: status as any },
+    });
+    return AdminMapper.toDomain(admin);
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.admin.delete({ where: { id } });
   }

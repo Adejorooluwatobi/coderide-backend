@@ -8,5 +8,6 @@ export interface IDriverDocumentRepository {
   findByStatus(status: string): Promise<DriverDocument[]>;
   create(driverDocument: CreateDriverDocumentParams): Promise<DriverDocument>;
   update(id: string, driverDocument: Partial<UpdateDriverDocumentParams>): Promise<DriverDocument>;
+  updateStatus(id: string, status: string): Promise<DriverDocument>;
   delete(id: string): Promise<void>;
 }

@@ -78,6 +78,16 @@ export class UserService {
     return updatedUser;
   }
 
+  async updateStatus(id: string, isActive: boolean): Promise<User> {
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      this.logger.error(`Cannot update status, user not found with id: ${id}`);
+      throw new NotFoundException('User not found');
+    }
+    this.logger.log(`Updating status for user ${id} to ${isActive}`);
+    return this.userRepository.updateStatus(id, isActive);
+  }
+
   async delete(id: string): Promise<void> {
     const existingUser = await this.userRepository.findById(id);  
     if (!existingUser) {

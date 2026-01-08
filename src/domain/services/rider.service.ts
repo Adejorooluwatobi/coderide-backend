@@ -54,6 +54,15 @@ export class RiderService {
     return this.riderRepository.update(id, rider);
   }
 
+  async updateStatus(id: string, status: string): Promise<Rider> {
+    if (!id || typeof id !== 'string') {
+      this.logger.warn(`Invalid id provided for status update: ${id}`);
+      throw new Error('Invalid id provided');
+    }
+    this.logger.log(`Updating status for rider ${id} to ${status}`);
+    return this.riderRepository.updateStatus(id, status);
+  }
+
   async delete(id: string): Promise<void> {
     if (!id || typeof id !== 'string') {
       this.logger.warn(`Invalid id provided for deletion: ${id}`);

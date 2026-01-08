@@ -4,6 +4,7 @@ import { Vehicle } from "./vehicle.entity";
 import { Ride } from "./ride.entity";
 import { DocumentStatus } from "../enums/document-status.enum";
 import { ApiProperty } from "@nestjs/swagger";
+import { DriverStatus } from "../enums/driver-status.enum";
 
 export class Driver extends BaseEntity {
     @ApiProperty()
@@ -29,6 +30,9 @@ export class Driver extends BaseEntity {
 
     @ApiProperty()
     isOnline: boolean;
+
+    @ApiProperty()
+    status: DriverStatus;
 
     @ApiProperty()
     latitude?: number;

@@ -59,6 +59,15 @@ export class DriverService {
     return this.driverRepository.update(id, driver);
   }
 
+  async updateStatus(id: string, status: string): Promise<Driver> {
+    if (!id || typeof id !== 'string') {
+      this.logger.warn(`Invalid id provided for status update: ${id}`);
+      throw new Error('Invalid id provided');
+    }
+    this.logger.log(`Updating status for driver ${id} to ${status}`);
+    return this.driverRepository.updateStatus(id, status);
+  }
+
   async delete(id: string): Promise<void> {
     if (!id || typeof id !== 'string') {
       this.logger.warn(`Invalid id provided for deletion: ${id}`);

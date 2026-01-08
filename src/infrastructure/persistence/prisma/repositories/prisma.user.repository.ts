@@ -77,6 +77,15 @@ export class PrismaUserRepository implements IUserRepository {
     return UserMapper.toDomain(user);
   }
 
+  async updateStatus(id: string, isActive: boolean): Promise<User> {
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: { isActive },
+      include: PrismaUserRepository.INCLUDE_RELATIONS
+    });
+    return UserMapper.toDomain(user);
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.user.delete({ where: { id } });
   }

@@ -40,6 +40,14 @@ export class PrismaDriverDocumentRepository implements IDriverDocumentRepository
     return DriverDocumentMapper.toDomain(doc);
   }
 
+  async updateStatus(id: string, status: string): Promise<DriverDocument> {
+    const doc = await this.prisma.driverDocument.update({
+      where: { id },
+      data: { status: status as DocumentStatus },
+    });
+    return DriverDocumentMapper.toDomain(doc);
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.driverDocument.delete({ where: { id } });
   }

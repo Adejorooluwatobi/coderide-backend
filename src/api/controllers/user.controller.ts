@@ -4,6 +4,7 @@ import { ApiExtraModels, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserMapper } from 'src/infrastructure/mappers/user.mapper';
 import { CreateUserDto } from 'src/application/DTO/user/create-user.dto';
 import { UpdateUserDto } from 'src/application/DTO/user/update-user.dto';
+import { UpdateStatusDto } from 'src/application/DTO/common/update-status.dto';
 import { SecureUserResponseDto } from 'src/application/DTO/response';
 // REMOVED 'import * as bcrypt from 'bcrypt';' - Hashing is service logic
 
@@ -124,6 +125,19 @@ export class UserController {
     return {
       succeeded: true,
       message: 'User updated successfully',
+      resultData: secureUser
+    };
+  }
+
+  @Put(':id/status')
+  @ApiOperation({ summary: 'Update user status' })
+  @ApiResponse({ status: 200, description: 'User status updated successfully', type: SecureUserResponseDto })
+  async updateStatus(@Param('id') id: string, @Body(new ValidationPipe()) statusData: UpdateStatusDto) {
+    const user = await this.userService.updateStatus(id, statusData.status === 'true' || statusData.status === true);
+    const secureUser = UserMapper.toSecureResponse(user);
+    return {
+      succeeded: true,
+      message: 'User status updated successfully',
       resultData: secureUser
     };
   }

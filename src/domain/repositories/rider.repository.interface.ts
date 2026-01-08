@@ -8,5 +8,6 @@ export interface IRiderRepository {
   findByDefaultPaymentMethodId(defaultPaymentMethodId: string): Promise<Rider | null>;
   create(rider: CreateRiderParams): Promise<Rider>;
   update(id: string, rider: Partial<UpdateRiderParams>): Promise<Rider>;
+  updateStatus(id: string, status: string): Promise<Rider>;
   delete(id: string): Promise<void>;
 }
