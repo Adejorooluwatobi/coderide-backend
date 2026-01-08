@@ -1,4 +1,5 @@
 import { BaseEntity } from "./base.entity";
+import { Chat } from "./chat.entity";
 import { User } from "./user.entity";
 import { Vehicle } from "./vehicle.entity";
 import { Ride } from "./ride.entity";
@@ -54,6 +55,9 @@ export class Driver extends BaseEntity {
 
     @ApiProperty({ type: () => [Ride] })
     rides?: Ride[];
+
+    @ApiProperty({ type: () => [Chat] })
+    chats?: Chat[];
 
     constructor(data: Partial<Driver>) {
         super();

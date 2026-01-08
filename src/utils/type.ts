@@ -45,6 +45,8 @@ import { CreateVehicleDto } from '../application/DTO/vehicle/create-vehicle.dto'
 import { UpdateVehicleDto } from '../application/DTO/vehicle/update-vehicle.dto';
 import { CreatePayoutDto } from '../application/DTO/payout/create-payout.dto';
 import { UpdatePayoutDto } from '../application/DTO/payout/update-payout.dto';
+import { CreateChatDto } from 'src/application/DTO/chat/create-chat.dto';
+import { CreateChatMessageDto } from 'src/application/DTO/chat-message/create-chat-message.dto';
 
 // ============================================
 // STANDARD PARAMS (No JWT modification needed)
@@ -127,3 +129,7 @@ export type UpdateReferralParams = UpdateReferralDto;
 
 export type CreateTicketMessageParams = CreateTicketMessageDto & { senderId: string };
 export type UpdateTicketMessageParams = UpdateTicketMessageDto;
+
+export type CreateChatParams = CreateChatDto & { userId: string };
+export type CreateChatMessageParams = CreateChatMessageDto & { senderId: string };
+export type SendMessageParams = CreateChatMessageDto & { senderId: string };

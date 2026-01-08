@@ -32,6 +32,7 @@ model User {
   rider             Rider?
   supportTickets    SupportTicket[]
   ticketMessages    TicketMessage[]
+  chatMessages      ChatMessage[]
 }
 
 model Rider {
@@ -48,6 +49,7 @@ model Rider {
   promotionUsages        PromotionUsage[]
   rides                  Ride[]
   user                   User             @relation(fields: [userId], references: [id])
+  chats                  Chat[]
 
   @@index([status])
 }
@@ -72,6 +74,7 @@ model Driver {
   earnings           Earning[]
   payouts            Payout[]
   rides              Ride[]
+  chats              Chat[]
   ownedVehicles      Vehicle[]           @relation("OwnedVehicles")
   vehicleAssignments VehicleAssignment[]
 
@@ -88,6 +91,8 @@ model Admin {
   permissions     Int
   status          AdminStatus     @default(ACTIVE)
   assignedTickets SupportTicket[]
+  chats           Chat[]
+  chatMessages    ChatMessage[]
 
   @@index([status])
 }
@@ -170,6 +175,7 @@ model Ride {
   rider                Rider            @relation(fields: [riderId], references: [id])
   trackingPoints       RideTracking[]
   supportTickets       SupportTicket[]
+  chat                 Chat?
 
   @@index([status, riderId])
   @@index([status, driverId])
@@ -597,4 +603,44 @@ enum RiderStatus {
 enum AdminStatus {
   ACTIVE
   INACTIVE
+}
+
+model Chat {
+  id        String        @id @default(uuid())
+  rideId    String?       @unique
+  riderId   String?
+  driverId  String?
+  adminId   String?
+  type      ChatType      @default(RIDE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  ride      Ride?         @relation(fields: [rideId], references: [id])
+  rider     Rider?        @relation(fields: [riderId], references: [id])
+  driver    Driver?       @relation(fields: [driverId], references: [id])
+  admin     Admin?        @relation(fields: [adminId], references: [id])
+  messages  ChatMessage[]
+
+  @@index([riderId, driverId])
+  @@index([adminId])
+}
+
+model ChatMessage {
+  id            String   @id @default(uuid())
+  chatId        String
+  senderUserId  String?
+  senderAdminId String?
+  message       String
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  chat          Chat     @relation(fields: [chatId], references: [id])
+  senderUser    User?    @relation(fields: [senderUserId], references: [id])
+  senderAdmin   Admin?   @relation(fields: [senderAdminId], references: [id])
+
+  @@index([chatId, createdAt])
+}
+
+enum ChatType {
+  RIDE
+  SUPPORT
+  ADMIN
 }

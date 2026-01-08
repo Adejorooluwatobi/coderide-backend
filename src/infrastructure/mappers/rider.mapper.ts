@@ -2,6 +2,7 @@ import { Rider as PrismaRider } from '@prisma/client';
 import { Rider } from '../../domain/entities/rider.entity';
 import { Decimal } from '@prisma/client/runtime/library';
 import { RiderStatus } from 'src/domain/enums/rider-status.enum';
+import { ChatMapper } from './chat.mapper';
 
 export class RiderMapper {
   static toDomain(prismaRider: PrismaRider): Rider {
@@ -14,6 +15,8 @@ export class RiderMapper {
       status: prismaRider.status as RiderStatus,
       preferredLanguage: prismaRider.preferredLanguage ?? undefined,
       savedLocations: prismaRider.savedLocations ?? undefined,
+      // Mapping relations
+      chats: (prismaRider as any).chats?.map((c: any) => ChatMapper.toDomain(c)) || [],
     });
   }
 

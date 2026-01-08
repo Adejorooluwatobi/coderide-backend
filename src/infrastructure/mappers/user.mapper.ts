@@ -6,6 +6,7 @@ import { DriverMapper } from './driver.mapper';
 import { PaymentMethodMapper } from './payment-method.mapper';
 import { NotificationMapper } from './notification.mapper';
 import { RatingMapper } from './rating.mapper';
+import { ChatMapper } from './chat.mapper';
 
 export class UserMapper {
   private static mapUserTypeToDomain(prismaUserType: PrismaUserType): UserType {
@@ -34,6 +35,7 @@ export class UserMapper {
       notifications: prismaUser.notifications?.map((n: any) => NotificationMapper.toDomain(n)) || [],
       sentRatings: prismaUser.sentRatings?.map((r: any) => RatingMapper.toDomain(r)) || [],
       receivedRatings: prismaUser.receivedRatings?.map((r: any) => RatingMapper.toDomain(r)) || [],
+      chatMessages: prismaUser.chatMessages?.map((m: any) => ChatMapper.toMessageDomain(m)) || [],
     });
   }
 

@@ -3,6 +3,7 @@ import { Ride } from '../../domain/entities/ride.entity';
 import { CancelledBy, RideStatus } from 'src/domain/enums/ride-status.enum';
 import { VehicleCategory } from 'src/domain/enums/vehicle-category.enum';
 import { Decimal } from '@prisma/client/runtime/library';
+import { ChatMapper } from './chat.mapper';
 
 export class RideMapper {
   static toDomain(prismaRide: PrismaRide): Ride {
@@ -31,6 +32,8 @@ export class RideMapper {
       cancelledAt: prismaRide.cancelledAt ?? undefined,
       cancellationReason: prismaRide.cancellationReason ?? undefined,
       cancelledBy: prismaRide.cancelledBy as CancelledBy,
+      // Mapping relations
+      chat: (prismaRide as any).chat ? ChatMapper.toDomain((prismaRide as any).chat) : undefined,
     });
   }
 

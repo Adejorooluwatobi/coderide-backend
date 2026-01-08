@@ -9,13 +9,13 @@ import { Priority } from '../enums/priority.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SupportTicket extends BaseEntity {
-    @ApiProperty()
+    @ApiProperty({ type: () => User })
     user: User;
 
     @ApiProperty()
     userId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Ride })
     ride?: Ride;
 
     @ApiProperty()
@@ -36,7 +36,7 @@ export class SupportTicket extends BaseEntity {
     @ApiProperty()
     priority: Priority;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => Admin })
     assignedTo?: Admin;
 
     @ApiProperty()
@@ -45,7 +45,7 @@ export class SupportTicket extends BaseEntity {
     @ApiProperty()
     resolvedAt?: Date;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => [TicketMessage] })
     messages?: TicketMessage[];
 
     constructor(data: Partial<SupportTicket>) {
