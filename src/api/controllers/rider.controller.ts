@@ -3,6 +3,7 @@ import { RiderService } from '../../domain/services/rider.service';
 import { ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { CreateRiderDto } from 'src/application/DTO/rider/create-rider.dto';
 import { UpdateRiderDto } from 'src/application/DTO/rider/update-rider.dto';
+import { UpdateStatusDto } from 'src/application/DTO/common/update-status.dto';
 import { UserGuard } from '../auth/guards/user.guard';
 import { User } from '../../shared/common/decorators/user.decorator';
 import { RiderGuard } from '../auth/guards';
@@ -77,6 +78,18 @@ export class RiderController {
     return {
       succeeded: true,
       message: 'Rider updated successfully',
+      resultData: rider
+    };
+  }
+
+  @Put(':id/status')
+  @ApiOperation({ summary: 'Update rider status' })
+  @ApiResponse({ status: 200, description: 'Rider status updated successfully', type: Rider })
+  async updateStatus(@Param('id') id: string, @Body(new ValidationPipe()) statusData: UpdateStatusDto) {
+    const rider = await this.riderService.updateStatus(id, statusData.status);
+    return {
+      succeeded: true,
+      message: 'Rider status updated successfully',
       resultData: rider
     };
   }

@@ -7,5 +7,6 @@ export interface IAdminRepository {
   findByUsername(username: string): Promise<Admin | null>;
   create(admin: CreateAdminParams): Promise<Admin>;
   update(id: string, admin: Partial<UpdateAdminParams>): Promise<Admin>;
+  updateStatus(id: string, status: string): Promise<Admin>;
   delete(id: string): Promise<void>;
 }

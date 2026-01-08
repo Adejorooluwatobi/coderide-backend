@@ -39,6 +39,7 @@ model Rider {
   userId                 String           @unique
   defaultPaymentMethodId String?          @unique
   rating                 Decimal?
+  status                 RiderStatus      @default(ACTIVE)
   totalRides             Int              @default(0)
   preferredLanguage      String?
   savedLocations         Json?
@@ -47,6 +48,8 @@ model Rider {
   promotionUsages        PromotionUsage[]
   rides                  Ride[]
   user                   User             @relation(fields: [userId], references: [id])
+
+  @@index([status])
 }
 
 model Driver {
@@ -58,6 +61,7 @@ model Driver {
   totalRides         Int                 @default(0)
   totalEarnings      Decimal             @default(0)
   isOnline           Boolean             @default(false)
+  status             DriverStatus        @default(PENDING)
   latitude           Float?
   longitude          Float?
   documentStatus     DocumentStatus      @default(PENDING)
@@ -74,6 +78,7 @@ model Driver {
   @@index([latitude, longitude])
   @@index([isOnline])
   @@index([documentStatus])
+  @@index([status])
 }
 
 model Admin {
@@ -81,7 +86,10 @@ model Admin {
   username        String          @unique
   password        String
   permissions     Int
+  status          AdminStatus     @default(ACTIVE)
   assignedTickets SupportTicket[]
+
+  @@index([status])
 }
 
 model Vehicle {
@@ -570,4 +578,23 @@ enum Priority {
 enum UserType {
   RIDER
   DRIVER
+}
+
+enum DriverStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+  BANNED
+}
+
+enum RiderStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum AdminStatus {
+  ACTIVE
+  INACTIVE
 }

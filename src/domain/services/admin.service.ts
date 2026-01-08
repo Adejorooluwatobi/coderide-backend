@@ -58,6 +58,15 @@ export class AdminService {
     return this.adminRepository.update(id, admin);
   }
 
+  async updateStatus(id: string, status: string): Promise<Admin> {
+    if (!id || typeof id !== 'string') {
+      this.logger.warn(`Invalid id provided for status update: ${id}`);
+      throw new Error('Invalid id');
+    }
+    this.logger.log(`Updating status for admin ${id} to ${status}`);
+    return this.adminRepository.updateStatus(id, status);
+  }
+
   async delete(id: string): Promise<void> {
     if (!id || typeof id !== 'string') {
       this.logger.warn(`Invalid id provided: ${id}`);

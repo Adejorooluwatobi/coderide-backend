@@ -1,5 +1,6 @@
 import { Admin as PrismaAdmin } from '@prisma/client';
 import { Admin } from '../../domain/entities/admin.entity';
+import { AdminStatus } from 'src/domain/enums/admin-status.enum';
 
 export class AdminMapper {
   static toDomain(prismaAdmin: PrismaAdmin): Admin {
@@ -8,6 +9,7 @@ export class AdminMapper {
       username: prismaAdmin.username,
       password: prismaAdmin.password,
       permissions: prismaAdmin.permissions,
+      status: prismaAdmin.status as AdminStatus,
     });
   }
 
@@ -16,6 +18,7 @@ export class AdminMapper {
       username: admin.username,
       password: admin.password,
       permissions: admin.permissions,
+      status: admin.status as AdminStatus,
     };
   }
 
@@ -24,6 +27,7 @@ export class AdminMapper {
       id: admin.id,
       username: admin.username,
       permissions: admin.permissions,
+      status: admin.status as AdminStatus,
     };
   }
 }

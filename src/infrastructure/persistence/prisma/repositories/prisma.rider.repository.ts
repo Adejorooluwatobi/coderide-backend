@@ -45,6 +45,14 @@ export class PrismaRiderRepository implements IRiderRepository {
     return RiderMapper.toDomain(rider);
   }
 
+  async updateStatus(id: string, status: string): Promise<Rider> {
+    const rider = await this.prisma.rider.update({
+      where: { id },
+      data: { status: status as any },
+    });
+    return RiderMapper.toDomain(rider);
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.rider.delete({ where: { id } });
   }

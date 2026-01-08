@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { AdminPermission } from "../enums/admin-permision.enum";
 import { BaseEntity } from "./base.entity";
+import { AdminStatus } from "../enums/admin-status.enum";
 
 export class Admin extends BaseEntity {
     @ApiProperty()
@@ -12,6 +13,9 @@ export class Admin extends BaseEntity {
     // Stores the sum of all permissions (e.g., 32 + 4 = 36)
     @ApiProperty()
     permissions: AdminPermission; 
+
+    @ApiProperty()
+    status?: AdminStatus;
 
     constructor(data: Partial<Admin>) {
         super();

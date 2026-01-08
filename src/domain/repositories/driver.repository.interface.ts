@@ -9,5 +9,6 @@ export interface IDriverRepository {
   createApplication(driver: CreateDriverApplicationParams): Promise<Driver>;
   createCompanyDriver(driver: CreateCompanyDriverParams): Promise<Driver>;
   update(id: string, driver: Partial<UpdateDriverParams>): Promise<Driver>;
+  updateStatus(id: string, status: string): Promise<Driver>;
   delete(id: string): Promise<void>;
 }

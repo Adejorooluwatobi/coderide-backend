@@ -5,6 +5,7 @@ import { DocumentStatus } from 'src/domain/enums/document-status.enum';
 import { UserMapper } from './user.mapper';
 import { VehicleMapper } from './vehicle.mapper';
 import { RideMapper } from './ride.mapper';
+import { DriverStatus } from 'src/domain/enums/driver-status.enum';
 
 export class DriverMapper {
   static toDomain(prismaDriver: any): Driver {
@@ -17,6 +18,7 @@ export class DriverMapper {
       totalRides: prismaDriver.totalRides,
       totalEarnings: Number(prismaDriver.totalEarnings),
       isOnline: prismaDriver.isOnline,
+      status: prismaDriver.status as DriverStatus,
       latitude: prismaDriver.latitude ?? undefined,
       longitude: prismaDriver.longitude ?? undefined,
       documentStatus: prismaDriver.documentStatus as DocumentStatus,
@@ -42,9 +44,10 @@ export class DriverMapper {
       totalRides: driver.totalRides,
       totalEarnings: new Decimal(driver.totalEarnings),
       isOnline: driver.isOnline,
+      status: driver.status as DriverStatus,
       latitude: driver.latitude ?? null,
       longitude: driver.longitude ?? null,
-      documentStatus: driver.documentStatus as any,
+      documentStatus: driver.documentStatus as DocumentStatus,
       bankAccountDetails: (driver.bankAccountDetails as any) ?? null,
     };
   }

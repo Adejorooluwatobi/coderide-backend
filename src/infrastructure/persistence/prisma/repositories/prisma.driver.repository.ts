@@ -85,6 +85,15 @@ export class PrismaDriverRepository implements IDriverRepository {
     return DriverMapper.toDomain(driver);
   }
 
+  async updateStatus(id: string, status: string): Promise<Driver> {
+    const driver = await this.prisma.driver.update({
+      where: { id },
+      data: { status: status as any },
+      include: PrismaDriverRepository.INCLUDE_RELATIONS,
+    });
+    return DriverMapper.toDomain(driver);
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.driver.delete({ where: { id } });
   }

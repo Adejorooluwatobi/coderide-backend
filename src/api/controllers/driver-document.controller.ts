@@ -3,6 +3,7 @@ import { DriverDocumentService } from '../../domain/services/driver-document.ser
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateDriverDocumentDto } from 'src/application/DTO/driver-document/create-driver-document.dto';
 import { UpdateDriverDocumentDto } from 'src/application/DTO/driver-document/update-driver-document.dto';
+import { UpdateStatusDto } from 'src/application/DTO/common/update-status.dto';
 import { DriverDocument } from 'src/domain/entities/driver-document.entity';
 
 @Controller('driver-document')
@@ -56,6 +57,14 @@ export class DriverDocumentController {
   async update(@Param('id') id: string, @Body(new ValidationPipe()) data: Partial<UpdateDriverDocumentDto>) {
     const doc = await this.driverDocumentService.update(id, data);
     return { succeeded: true, message: 'Driver document updated successfully', resultData: doc };
+  }
+
+  @Put(':id/status')
+  @ApiOperation({ summary: 'Update driver document status' })
+  @ApiResponse({ status: 200, description: 'Driver document status updated successfully', type: DriverDocument })
+  async updateStatus(@Param('id') id: string, @Body(new ValidationPipe()) statusData: UpdateStatusDto) {
+    const doc = await this.driverDocumentService.updateStatus(id, statusData.status);
+    return { succeeded: true, message: 'Driver document status updated successfully', resultData: doc };
   }
 
   @Delete(':id')
