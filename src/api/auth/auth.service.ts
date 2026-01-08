@@ -6,6 +6,7 @@ import { CreateAdminDto } from 'src/application/DTO/admin/create-admin.dto';
 import { CreateUserDto } from 'src/application/DTO/user/create-user.dto';
 import { AdminService } from 'src/domain/services/admin.service';
 import { UserService } from 'src/domain/services/user.service';
+import { AdminStatus } from 'src/domain/enums/admin-status.enum';
 
 interface AuthResponse {
   access_token: string;
@@ -87,9 +88,12 @@ export class AuthService {
       const payload = { sub: user.id, email: user.email, role: user.userType };
       const accessToken = this.jwtService.sign(payload);
 
+      // Automate isActive = true on login
+      await this.userService.updateStatus(user.id, true);
+
       return {
         access_token: accessToken,
-        user: {isAdmin: false, isActive: user.isActive, name: user.firstName, role: user.userType },
+        user: {isAdmin: false, isActive: true, name: user.firstName, role: user.userType },
       };
     } catch (error) {
       this.logger.error('User login error', error);
@@ -131,10 +135,24 @@ export class AuthService {
       }
       const payload = { sub: admin.id, email: admin.username, role: 'admin', permissions: admin.permissions };
       const accessToken = this.jwtService.sign(payload);
+
+      // Automate status = ACTIVE on login
+      await this.adminService.updateStatus(admin.id, AdminStatus.ACTIVE);
+
       return { access_token: accessToken, admin: { isAdmin: true, isActive: true, name: admin.username, role: 'ADMIN', permissions: admin.permissions } };
     } catch (error) {
       this.logger.error('Admin login error', error);
       throw error;
     }
+  }
+
+  async logoutUser(userId: string): Promise<void> {
+    this.logger.log(`Logging out user: ${userId}`);
+    await this.userService.updateStatus(userId, false);
+  }
+
+  async logoutAdmin(adminId: string): Promise<void> {
+    this.logger.log(`Logging out admin: ${adminId}`);
+    await this.adminService.updateStatus(adminId, AdminStatus.INACTIVE);
   }
 }

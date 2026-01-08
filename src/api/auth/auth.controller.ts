@@ -1,9 +1,13 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { AdminGuard, UserGuard } from './guards';
 import { AdminAccessTokenDto, UserAccessTokenDto } from './dto/access-token.dto';
 import { AdminLoginDto, UserLoginDto } from './dto/login.dto';
 import { CreateUserDto } from 'src/application/DTO/user/create-user.dto';
 import { CreateAdminDto } from 'src/application/DTO/admin/create-admin.dto';
+import { User } from 'src/shared/common/decorators/user.decorator';
+import type { UserPayload } from '../../shared/interfaces/user-payload.interface';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 
 @Controller('auth')
@@ -28,6 +32,17 @@ export class AuthController {
     };
   }
 
+  @Post('user/logout')
+  @UseGuards(UserGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'User logged out successfully' })
+  async userLogout(@User() user: UserPayload): Promise<string> {
+    await this.authService.logoutUser(user.sub);
+    return 'User logged out successfully';
+  }
+
   @Post('admin/register')
   async registerAdmin(@Body() registerDto: CreateAdminDto): Promise<string> {
     await this.authService.registerAdmin({
@@ -49,6 +64,17 @@ export class AuthController {
       role: token.admin?.role || 'admin',
       permissions: token.admin?.permissions || 0
     };
+  }
+
+  @Post('admin/logout')
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout admin' })
+  @ApiResponse({ status: 200, description: 'Admin logged out successfully' })
+  async adminLogout(@User() user: UserPayload): Promise<string> {
+    await this.authService.logoutAdmin(user.sub);
+    return 'Admin logged out successfully';
   }
 
 }
