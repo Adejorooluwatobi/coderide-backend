@@ -6,9 +6,10 @@ import { AdminDashboardService } from '../../domain/services/admin-dashboard.ser
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
 import { PrismaAdminRepository } from 'src/infrastructure/persistence/prisma/repositories/prisma.admin.repository';
 import { AuthModule } from '../auth/auth.module';
+import { DriverModule } from './driver.module';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => AuthModule)],
+  imports: [PrismaModule, DriverModule, forwardRef(() => AuthModule)],
   controllers: [AdminController, AdminDashboardController],
   providers: [
     AdminService,

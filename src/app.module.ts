@@ -1,4 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { WinstonModule, utilities as nestWinstonUtilities } from 'nest-winston';
+import * as winston from 'winston';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './application/use-cases/app.service';
@@ -34,6 +36,7 @@ import { RideTrackingModule } from './api/modules/ride-tracking.module';
 import { AuthModule } from './api/auth/auth.module';
 import { PayoutModule } from './api/modules/payout.module';
 import { PricingModule } from './api/modules/pricing.module';
+import { ChatModule } from './api/modules/chat.module';
 import { CustomThrottlerGuard } from './shared/guards/custom-throttler.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bull';
@@ -43,6 +46,27 @@ import { HealthController } from './api/controllers/health.controller';
 
 @Module({
   imports: [
+    WinstonModule.forRoot({
+      transports: [
+        // 1. Print to Console (good for development)
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.ms(),
+            nestWinstonUtilities.format.nestLike('CodeRide', { colors: true, prettyPrint: true }),
+          ),
+        }),
+        // 2. Save Errors to a file (good for production)
+        new winston.transports.File({
+          filename: 'logs/error.log',
+          level: 'error', // Only saves errors here
+        }),
+        // 3. Save Everything to a combined file
+        new winston.transports.File({
+          filename: 'logs/combined.log',
+        }),
+      ],
+    }),
     FilesModule,
     FastifyMulterModule.register({
       dest: './uploads',
@@ -96,6 +120,7 @@ import { HealthController } from './api/controllers/health.controller';
     UserModule,
     VehicleModule,
     VehicleAssignmentModule,
+    ChatModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

@@ -3,6 +3,7 @@ import { User } from "./user.entity";
 import { PaymentMethod } from "./payment-method.entity";
 import { Ride } from "./ride.entity";
 import { Payment } from "./payment.entity";
+import { Chat } from "./chat.entity";
 import { ApiProperty } from "@nestjs/swagger";
 import { RiderStatus } from "../enums/rider-status.enum";
 
@@ -36,6 +37,9 @@ export class Rider extends BaseEntity {
 
     @ApiProperty({ type: () => [Ride] })
     rides?: Ride[];
+
+    @ApiProperty({ type: () => [Chat] })
+    chats?: Chat[];
 
     @ApiProperty({ type: () => [Payment] })
     payments?: Payment[];

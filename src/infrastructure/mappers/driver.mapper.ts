@@ -6,6 +6,7 @@ import { UserMapper } from './user.mapper';
 import { VehicleMapper } from './vehicle.mapper';
 import { RideMapper } from './ride.mapper';
 import { DriverStatus } from 'src/domain/enums/driver-status.enum';
+import { ChatMapper } from './chat.mapper';
 
 export class DriverMapper {
   static toDomain(prismaDriver: any): Driver {
@@ -32,6 +33,7 @@ export class DriverMapper {
         returnedAt: va.returnedAt,
       })) || [],
       rides: prismaDriver.rides?.map((r: any) => RideMapper.toDomain(r)) || [],
+      chats: prismaDriver.chats?.map((c: any) => ChatMapper.toDomain(c)) || [],
     });
   }
 

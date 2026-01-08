@@ -2,7 +2,9 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Admin } from '../entities/admin.entity';
 import type { IAdminRepository } from '../repositories/admin.repository.interface';
 import { CreateAdminParams, UpdateAdminParams } from 'src/utils/type';
-import * as bcrypt from 'bcrypt'; // Added bcrypt import
+import * as bcrypt from 'bcrypt'; 
+import { DriverService } from './driver.service';
+import { DriverStatus } from '../enums/driver-status.enum';
 
 @Injectable()
 export class AdminService {
@@ -10,7 +12,24 @@ export class AdminService {
   constructor(
     @Inject('IAdminRepository')
     private readonly adminRepository: IAdminRepository,
+    private readonly driverService: DriverService,
   ) {}
+
+  async approveDriver(driverId: string) {
+    this.logger.log(`Attempting to approve driver: ${driverId}`);
+    try {
+      const driver = await this.driverService.findById(driverId);
+      if (!driver) {
+        throw new Error(`Driver with ID ${driverId} not found`);
+      }
+      await this.driverService.updateStatus(driverId, DriverStatus.APPROVED);
+      this.logger.log(`Driver ${driverId} approved successfully`);
+      return { success: true, message: 'Driver approved successfully' };
+    } catch (error) {
+      this.logger.error(`Failed to approve driver ${driverId}`, error.stack);
+      throw error;
+    }
+  }
 
   async findById(id: string): Promise<Admin | null> {
     if (!id || typeof id !== 'string') {

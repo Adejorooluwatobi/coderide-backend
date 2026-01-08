@@ -5,9 +5,18 @@ import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.modul
 import { PrismaPaymentRepository } from 'src/infrastructure/persistence/prisma/repositories/prisma.payment.repository';
 import { AuthModule } from '../auth/auth.module';
 import { PaystackService } from 'src/infrastructure/external-services/paystack.service';
+import { NotificationModule } from './notification.module';
+import { RideModule } from './ride.module';
+import { RideGateway } from 'src/shared/websockets/ride.gateway';
+import { forwardRef } from '@nestjs/common';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    NotificationModule,
+    forwardRef(() => RideModule),
+  ],
   controllers: [PaymentController],
   providers: [
     PaymentService,

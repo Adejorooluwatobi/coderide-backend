@@ -5,8 +5,9 @@ import { Payment } from "./payment.entity";
 import { Rating } from "./rating.entity";
 import { RideTracking } from "./ride-tracking.entity";
 import { VehicleCategory } from "../enums/vehicle-category.enum";
-import { CancelledBy, RideStatus } from "../enums/ride-status.enum";
 import { ApiProperty } from "@nestjs/swagger";
+import { Chat } from "./chat.entity";
+import { CancelledBy, RideStatus } from "../enums/ride-status.enum";
 
 
 export class Ride extends BaseEntity {
@@ -93,6 +94,9 @@ export class Ride extends BaseEntity {
 
     @ApiProperty({ type: () => [RideTracking] })
     trackingPoints?: RideTracking[];
+
+    @ApiProperty({ type: () => Chat })
+    chat?: Chat;
 
     constructor(data: Partial<Ride>) {
         super();

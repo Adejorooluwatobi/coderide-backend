@@ -64,6 +64,14 @@ export class AdminController {
     return { succeeded: true, message: 'Admin status updated successfully', resultData: admin };
   }
 
+  @Post('approve-driver/:id')
+  @ApiOperation({ summary: 'Approve a driver application' })
+  @ApiResponse({ status: 200, description: 'Driver approved successfully' })
+  async approveDriver(@Param('id') id: string) {
+    const result = await this.adminService.approveDriver(id);
+    return { succeeded: true, ...result };
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete admin' })
   @ApiResponse({ status: 200, description: 'Admin deleted successfully' })

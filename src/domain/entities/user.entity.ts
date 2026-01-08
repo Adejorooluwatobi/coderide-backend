@@ -4,6 +4,9 @@ import { Driver } from "./driver.entity";
 import { PaymentMethod } from "./payment-method.entity";
 import { Notification } from "./notification.entity";
 import { Rating } from "./rating.entity";
+import { SupportTicket } from "./support-ticket.entity";
+import { TicketMessage } from "./ticket-message.entity";
+import { ChatMessage } from "./chat-message.entity";
 import { UserType } from "../enums/user-type.enum";
 import { ApiProperty } from "@nestjs/swagger";
 
@@ -56,6 +59,15 @@ export class User extends BaseEntity {
 
     @ApiProperty({ type: () => [Rating] })
     receivedRatings?: Rating[];
+
+    @ApiProperty({ type: () => [SupportTicket] })
+    supportTickets?: SupportTicket[];
+
+    @ApiProperty({ type: () => [TicketMessage] })
+    ticketMessages?: TicketMessage[];
+
+    @ApiProperty({ type: () => [ChatMessage] })
+    chatMessages?: ChatMessage[];
 
     constructor(data: Partial<User>) {
         super();

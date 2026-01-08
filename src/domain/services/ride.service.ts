@@ -13,6 +13,9 @@ import { VehicleCategory } from '../enums/vehicle-category.enum';
 import { EarningService } from './earning.service';
 import { PayoutStatus } from '../enums/payout-status.enum';
 import { SurgeZoneService } from './surge-zone.service';
+import { RideGateway } from 'src/shared/websockets/ride.gateway';
+import { ChatService } from './chat.service';
+import { ChatType } from '../enums/chat.enum';
 
 @Injectable()
 export class RideService {
@@ -26,7 +29,49 @@ export class RideService {
     private readonly pricingService: PricingService,
     private readonly earningService: EarningService,
     private readonly surgeZoneService: SurgeZoneService,
+    private readonly rideGateway: RideGateway,
+    private readonly chatService: ChatService,
   ) {}
+
+  async requestRide(passengerId: string, pickupLat: number, pickupLng: number, destinationLat: number, destinationLng: number, rideType: VehicleCategory) {
+    this.logger.log(`Ride request received from passenger ${passengerId}`);
+    
+    // 1. Create a "PENDING" ride in the database first to get a real ID
+    const ride = await this.create({
+      riderId: passengerId,
+      pickupLatitude: pickupLat,
+      pickupLongitude: pickupLng,
+      destinationLatitude: destinationLat,
+      destinationLongitude: destinationLng,
+      pickupAddress: 'Pickup Point', // In a real app, reverse geocode this
+      destinationAddress: 'Destination Point',
+      rideType: rideType as any,
+      status: RideStatus.REQUESTED,
+    } as any);
+
+    // 2. Find nearby online drivers
+    const nearbyDrivers: any[] = (await this.driverService.findNearestDrivers(pickupLat, pickupLng)) as any[];
+
+    if (nearbyDrivers.length === 0) {
+      this.logger.warn(`No drivers found for ride ${ride.id}`);
+      return { succeeded: false, message: "No drivers available nearby", resultData: ride };
+    }
+
+    // 3. Notify drivers via RideGateway
+    // For now, let's notify the nearest driver
+    const bestDriver = nearbyDrivers[0];
+    
+    // Using RideGateway notification
+    this.rideGateway.emitNotificationToUser(bestDriver.userId, {
+      type: 'NEW_RIDE_REQUEST',
+      rideId: ride.id,
+      pickupAddress: ride.pickupAddress,
+      destinationAddress: ride.destinationAddress,
+      estimatedPrice: ride.estimatedPrice,
+    });
+
+    return { succeeded: true, message: "Searching for drivers...", resultData: ride };
+  }
 
   async findById(id: string): Promise<Ride | null> { 
     if (!id || typeof id !== 'string') {
@@ -207,6 +252,38 @@ export class RideService {
             message: `Your ride status is now: ${status}`,
             type: NotificationType.RIDE_REQUEST, 
             isRead: false,
+        });
+
+        // Specific logic for ACCEPTED
+        if (status === RideStatus.ACCEPTED && updatedRide.driverId) {
+            const driver = await this.driverService.findById(updatedRide.driverId);
+            if (driver) {
+                // 1. Create Chat session
+                const chat = await this.chatService.getOrCreateChatForRide(id, updatedRide.riderId, driver.id);
+                
+                // 2. Notify Rider with more detail
+                await this.notificationService.create({
+                    userId: rider.userId,
+                    title: 'Driver Accepted Your Ride',
+                    message: `Driver is on the way! You can now chat with the driver in the app.`,
+                    type: NotificationType.RIDE_ACCEPTED,
+                    isRead: false,
+                });
+
+                // 3. Notify Admins
+                this.rideGateway.emitToAdmins('RIDE_ACCEPTED', {
+                    rideId: id,
+                    riderId: updatedRide.riderId,
+                    driverId: updatedRide.driverId,
+                    chatId: chat.id
+                });
+            }
+        }
+
+        // Notify Admins of ANY status change
+        this.rideGateway.emitToAdmins('RIDE_STATUS_UPDATED', {
+            rideId: id,
+            status: status
         });
     }
 

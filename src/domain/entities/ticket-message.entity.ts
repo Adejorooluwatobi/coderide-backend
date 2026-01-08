@@ -4,13 +4,13 @@ import { User } from './user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class TicketMessage extends BaseEntity {
-    @ApiProperty()
+    @ApiProperty({ type: () => SupportTicket })
     ticket: SupportTicket;
 
     @ApiProperty()
     ticketId: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: () => User })
     sender: User;
 
     @ApiProperty()

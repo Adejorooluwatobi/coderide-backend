@@ -17,6 +17,6 @@ import { AuthModule } from '../auth/auth.module';
       useClass: PrismaRideTrackingRepository,
     },
   ],
-  exports: [RideTrackingService],
+  exports: [RideTrackingService, RideTrackingGateway],
 })
 export class RideTrackingModule {}

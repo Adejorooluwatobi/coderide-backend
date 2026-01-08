@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Driver } from '../entities/driver.entity';
 import type { IDriverRepository } from '../repositories/driver.repository.interface';
 import { CreateCompanyDriverParams, CreateDriverApplicationParams, UpdateDriverParams } from 'src/utils/type';
+import { PrismaService } from 'src/infrastructure/persistence/prisma/prisma.service';
 
 @Injectable()
 export class DriverService {
@@ -9,7 +10,24 @@ export class DriverService {
   constructor(
     @Inject('IDriverRepository')
     private readonly driverRepository: IDriverRepository,
+    private prisma: PrismaService
   ) {}
+
+  async findNearestDrivers(lat: number, lng: number, radiusKm: number = 5 ) {
+    const drivers = await this.prisma.$queryRaw`
+      SELECT id, latitude, longitude,
+      ( 6371 * acos( cos( radians(${lat}) ) * cos( radians( latitude ) ) 
+      * cos( radians( longitude ) - radians(${lng}) ) + sin( radians(${lat}) ) 
+      * sin( radians( latitude ) ) ) ) AS distance
+      FROM "Driver"
+      WHERE "isOnline" = true
+      HAVING distance < ${radiusKm}
+      ORDER BY distance ASC
+      LIMIT 10;
+    `;
+    
+    return drivers;
+  }
 
   async findById(id: string): Promise<Driver | null> {
     if (!id || typeof id !== 'string') {

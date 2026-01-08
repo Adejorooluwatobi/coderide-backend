@@ -111,8 +111,15 @@ export class RideController {
     if (!rider) {
       throw new NotFoundException(`Rider for user ${user.sub} not found`);
     }
-    const ride = await this.rideService.create({ ...rideData, riderId: rider.id } as Ride);
-    return { succeeded: true, message: 'Ride created successfully', resultData: ride };
+    const ride = await this.rideService.requestRide(
+      rider.id,
+      rideData.pickupLatitude,
+      rideData.pickupLongitude,
+      rideData.destinationLatitude,
+      rideData.destinationLongitude,
+      rideData.rideType
+    );
+    return ride;
   }
 
   @Put(':id')
