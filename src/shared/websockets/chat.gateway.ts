@@ -92,9 +92,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const message = await this.chatService.sendMessage(
         data.chatId,
-        info.userId,
-        data.message,
-        info.isAdmin,
+        {
+          chatId: data.chatId,
+          message: data.message,
+          senderUserId: info.isAdmin ? undefined : info.userId,
+          senderAdminId: info.isAdmin ? info.userId : undefined,
+          senderId: info.userId,
+        },
       );
 
       // Broadcast to room

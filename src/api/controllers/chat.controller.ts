@@ -34,7 +34,13 @@ export class ChatController {
     @Request() req: any,
   ) {
     const userId = req.user.sub;
-    const isAdmin = req.user.role === 'ADMIN'; // Adjust based on your role naming
-    return this.chatService.sendMessage(id, userId, message, isAdmin);
+    const isAdmin = req.user.role === 'ADMIN';
+    return this.chatService.sendMessage(id, {
+      chatId: id,
+      message,
+      senderUserId: isAdmin ? undefined : userId,
+      senderAdminId: isAdmin ? userId : undefined,
+      senderId: userId,
+    });
   }
 }
