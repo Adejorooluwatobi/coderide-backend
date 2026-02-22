@@ -86,6 +86,18 @@ export class PrismaUserRepository implements IUserRepository {
     return UserMapper.toDomain(user);
   }
 
+  async updateOnlineStatus(id: string, isOnline: boolean): Promise<User> {
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: { 
+        isOnline,
+        lastSeen: new Date()
+      },
+      include: PrismaUserRepository.INCLUDE_RELATIONS
+    });
+    return UserMapper.toDomain(user);
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.user.delete({ where: { id } });
   }

@@ -3,9 +3,11 @@ import { Payout } from '../entities/payout.entity';
 import type { IPayoutRepository } from '../repositories/payout.repository.interface';
 import { CreatePayoutParams, UpdatePayoutParams } from 'src/utils/type';
 import { PaystackService } from 'src/infrastructure/external-services/paystack.service';
+import { FlutterwaveService } from 'src/infrastructure/external-services/flutterwave.service';
 import type { IEarningRepository } from '../repositories/earning.repository.interface';
 import { PayoutStatus } from '../enums/payout-status.enum';
 import type { IDriverRepository } from '../repositories/driver.repository.interface';
+import { PaymentGateway } from '../enums/payment.enum';
 
 @Injectable()
 export class PayoutService {
@@ -18,10 +20,11 @@ export class PayoutService {
     @Inject('IDriverRepository')
     private readonly driverRepository: IDriverRepository,
     private readonly paystackService: PaystackService,
+    private readonly flutterwaveService: FlutterwaveService,
   ) {}
 
-  async requestPayout(driverId: string): Promise<Payout> {
-    this.logger.log(`Payout request for driver ${driverId}`);
+  async requestPayout(driverId: string, gateway: PaymentGateway = PaymentGateway.PAYSTACK): Promise<Payout> {
+    this.logger.log(`Payout request for driver ${driverId} via ${gateway}`);
     
     // 1. Find all PENDING earnings
     const earnings = await this.earningRepository.findByDriverId(driverId);
@@ -42,26 +45,44 @@ export class PayoutService {
     const bankDetails = driver.bankAccountDetails as any;
 
     try {
-        // 3. Create Paystack Transfer Recipient
-        const recipientResponse = await this.paystackService.createTransferRecipient(
-            bankDetails.accountName,
-            bankDetails.accountNumber,
-            bankDetails.bankCode
-        );
+        let transferReference = '';
+        if (gateway === PaymentGateway.FLUTTERWAVE) {
+            // Initiate Flutterwave Transfer
+            const reference = `payout-${driverId}-${Date.now()}`;
+            const transferResponse = await this.flutterwaveService.initiateTransfer(
+                bankDetails.accountNumber,
+                bankDetails.bankCode,
+                totalAmount,
+                reference
+            );
 
-        if (!recipientResponse.status) {
-            throw new Error('Failed to create Paystack recipient');
-        }
+            if (transferResponse.status !== 'success') {
+                throw new Error('Flutterwave transfer initiation failed');
+            }
+            transferReference = transferResponse.data.reference;
+        } else {
+            // 3. Create Paystack Transfer Recipient
+            const recipientResponse = await this.paystackService.createTransferRecipient(
+                bankDetails.accountName,
+                bankDetails.accountNumber,
+                bankDetails.bankCode
+            );
 
-        // 4. Initiate Paystack Transfer
-        const transferResponse = await this.paystackService.initiateTransfer(
-            totalAmount * 100, // in kobo
-            recipientResponse.data.recipient_code,
-            `Payout for driver ${driverId}`
-        );
+            if (!recipientResponse.status) {
+                throw new Error('Failed to create Paystack recipient');
+            }
 
-        if (!transferResponse.status) {
-            throw new Error('Paystack transfer initiation failed');
+            // 4. Initiate Paystack Transfer
+            const transferResponse = await this.paystackService.initiateTransfer(
+                totalAmount * 100, // in kobo
+                recipientResponse.data.recipient_code,
+                `Payout for driver ${driverId}`
+            );
+
+            if (!transferResponse.status) {
+                throw new Error('Paystack transfer initiation failed');
+            }
+            transferReference = transferResponse.data.transfer_code;
         }
 
         // 5. Create Payout record
@@ -69,7 +90,7 @@ export class PayoutService {
             driverId,
             amount: totalAmount,
             status: PayoutStatus.PAID, // Since it's a mock/auto-success for now
-            transferReference: transferResponse.data.transfer_code,
+            transferReference,
         });
 
         // 6. Update Earning records

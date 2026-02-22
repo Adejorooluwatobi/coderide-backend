@@ -8,5 +8,6 @@ export interface IUserRepository {
   create(user: CreateUserParams): Promise<User>;
   update(id: string, user: Partial<UpdateUserParams>): Promise<User>;
   updateStatus(id: string, isActive: boolean): Promise<User>;
+  updateOnlineStatus(id: string, isOnline: boolean): Promise<User>;
   delete(id: string): Promise<void>;
 }

@@ -27,6 +27,22 @@ export class PrismaChatRepository implements IChatRepository {
     return chat ? ChatMapper.toDomain(chat) : null;
   }
 
+  async findByRiderId(riderId: string): Promise<Chat[]> {
+    const chats = await this.prisma.chat.findMany({
+      where: { riderId },
+      include: { messages: true, rider: true, driver: true, admin: true },
+    });
+    return chats.map((c) => ChatMapper.toDomain(c));
+  }
+
+  async findByDriverId(driverId: string): Promise<Chat[]> {
+    const chats = await this.prisma.chat.findMany({
+      where: { driverId },
+      include: { messages: true, rider: true, driver: true, admin: true },
+    });
+    return chats.map((c) => ChatMapper.toDomain(c));
+  }
+
   async findByParticipants(riderId?: string, driverId?: string, adminId?: string): Promise<Chat | null> {
     const chat = await this.prisma.chat.findFirst({
       where: {

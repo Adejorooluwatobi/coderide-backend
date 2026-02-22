@@ -88,6 +88,16 @@ export class UserService {
     return this.userRepository.updateStatus(id, isActive);
   }
 
+  async updateOnlineStatus(id: string, isOnline: boolean): Promise<User> {
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      this.logger.error(`Cannot update online status, user not found with id: ${id}`);
+      throw new NotFoundException('User not found');
+    }
+    this.logger.log(`Updating online status for user ${id} to ${isOnline}`);
+    return this.userRepository.updateOnlineStatus(id, isOnline);
+  }
+
   async delete(id: string): Promise<void> {
     const existingUser = await this.userRepository.findById(id);  
     if (!existingUser) {
