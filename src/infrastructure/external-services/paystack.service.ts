@@ -1,7 +1,7 @@
 import { Injectable, Logger, BadRequestException, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { IPaymentGatewayLogRepository } from 'src/domain/repositories/payment-gateway-log.repository.interface';
+import type { IPaymentGatewayLogRepository } from 'src/domain/repositories/payment-gateway-log.repository.interface';
 import { PaymentGateway } from 'src/domain/enums/payment.enum';
 
 @Injectable()

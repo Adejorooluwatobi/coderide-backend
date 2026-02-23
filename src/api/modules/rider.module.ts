@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { RiderController } from '../controllers/rider.controller';
 import { RiderService } from '../../domain/services/rider.service';
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
@@ -6,7 +6,7 @@ import { PrismaRiderRepository } from 'src/infrastructure/persistence/prisma/rep
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, forwardRef(() => AuthModule)],
   controllers: [RiderController],
   providers: [
     RiderService,

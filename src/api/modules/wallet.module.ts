@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { WalletController } from '../controllers/wallet.controller';
 import { AdminWalletController } from '../controllers/admin-wallet.controller';
 import { WalletService } from '../../domain/services/wallet.service';
@@ -12,8 +12,8 @@ import { PaymentModule } from './payment.module';
   imports: [
     PrismaModule,
     NotificationModule,
-    AuthModule,
-    PaymentModule,
+    forwardRef(() => AuthModule),
+    forwardRef(() => PaymentModule),
   ],
   controllers: [WalletController, AdminWalletController],
   providers: [

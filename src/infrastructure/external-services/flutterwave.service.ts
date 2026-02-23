@@ -1,7 +1,7 @@
 import { Injectable, Logger, BadRequestException, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { IPaymentGatewayLogRepository } from 'src/domain/repositories/payment-gateway-log.repository.interface';
+import type { IPaymentGatewayLogRepository } from 'src/domain/repositories/payment-gateway-log.repository.interface';
 import { PaymentGateway } from 'src/domain/enums/payment.enum';
 
 @Injectable()
@@ -17,9 +17,9 @@ export class FlutterwaveService {
     @Inject('IPaymentGatewayLogRepository')
     private readonly logRepository: IPaymentGatewayLogRepository,
   ) {
-    this.secretKey = this.configService.get<string>('FLUTTERWAVE_SECRET_KEY');
-    this.publicKey = this.configService.get<string>('FLUTTERWAVE_PUBLIC_KEY');
-    this.encryptionKey = this.configService.get<string>('FLUTTERWAVE_ENCRYPTION_KEY');
+    this.secretKey = this.configService.get<string>('FLUTTERWAVE_SECRET_KEY') as string;
+    this.publicKey = this.configService.get<string>('FLUTTERWAVE_PUBLIC_KEY') as string;
+    this.encryptionKey = this.configService.get<string>('FLUTTERWAVE_ENCRYPTION_KEY') as string;
     const isProd = this.configService.get('NODE_ENV') === 'production';
 
     if (!this.secretKey || !this.publicKey) {

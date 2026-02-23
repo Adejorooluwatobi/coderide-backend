@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { RideController } from '../controllers/ride.controller';
 import { RideService } from '../../domain/services/ride.service';
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
@@ -16,7 +16,7 @@ import { ChatModule } from './chat.module';
 import { RideGateway } from 'src/shared/websockets/ride.gateway';
 
 @Module({
-  imports: [PrismaModule, RiderModule, AuthModule, NotificationModule, DriverModule, EarningModule, SurgeZoneModule, PricingModule, RideTrackingModule, ChatModule],
+  imports: [PrismaModule, RiderModule, forwardRef(() => AuthModule), NotificationModule, DriverModule, EarningModule, SurgeZoneModule, PricingModule, RideTrackingModule, ChatModule],
   controllers: [RideController],
   providers: [
     RideService,

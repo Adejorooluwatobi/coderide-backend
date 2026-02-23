@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PaymentController } from '../controllers/payment.controller';
 import { WebhookController } from '../controllers/webhook.controller';
 import { PaymentService } from '../../domain/services/payment.service';
@@ -12,13 +12,12 @@ import { NotificationModule } from './notification.module';
 import { RideModule } from './ride.module';
 import { WalletModule } from './wallet.module';
 import { RideGateway } from 'src/shared/websockets/ride.gateway';
-import { forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     PrismaModule,
-    AuthModule,
+    forwardRef(() => AuthModule),
     NotificationModule,
     ConfigModule,
     forwardRef(() => RideModule),

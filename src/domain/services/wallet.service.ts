@@ -1,12 +1,12 @@
 import { Inject, Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
-import { IWalletRepository } from '../repositories/wallet.repository.interface';
+import type { IWalletRepository } from '../repositories/wallet.repository.interface';
 import { Wallet } from '../entities/wallet.entity';
 import { WalletTransaction } from '../entities/wallet-transaction.entity';
 import { TransactionType, TransactionCategory, TransactionStatus } from '../enums/wallet-transaction.enum';
 import { NotificationService } from './notification.service';
 import { NotificationType } from '../enums/notification.enum';
 import { VehicleOwnership } from '../enums/vehicle-ownership.enum';
-import * as moment from 'moment';
+import moment from 'moment';
 
 @Injectable()
 export class WalletService {

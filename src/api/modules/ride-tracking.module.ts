@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { RideTrackingController } from '../controllers/ride-tracking.controller';
 import { RideTrackingService } from '../../domain/services/ride-tracking.service';
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
@@ -7,7 +7,7 @@ import { RideTrackingGateway } from 'src/shared/websockets/ride-tracking.gateway
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, forwardRef(() => AuthModule)],
   controllers: [RideTrackingController],
   providers: [
     RideTrackingService,

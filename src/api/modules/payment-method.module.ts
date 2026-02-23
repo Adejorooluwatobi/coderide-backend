@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PaymentMethodController } from '../controllers/payment-method.controller';
 import { PaymentMethodService } from '../../domain/services/payment-method.service';
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
@@ -6,7 +6,7 @@ import { PrismaPaymentMethodRepository } from 'src/infrastructure/persistence/pr
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, forwardRef(() => AuthModule)],
   controllers: [PaymentMethodController],
   providers: [
     PaymentMethodService,

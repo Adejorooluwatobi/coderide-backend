@@ -4,7 +4,7 @@ import { WalletService } from '../../domain/services/wallet.service';
 import { ConfigService } from '@nestjs/config';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PaymentStatus, PaymentGateway } from '../../domain/enums/payment.enum';
-import { IPaymentGatewayLogRepository } from 'src/domain/repositories/payment-gateway-log.repository.interface';
+import type { IPaymentGatewayLogRepository } from 'src/domain/repositories/payment-gateway-log.repository.interface';
 import * as crypto from 'crypto';
 
 @ApiTags('Webhooks')
@@ -24,7 +24,7 @@ export class WebhookController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Paystack Webhook' })
   async handlePaystackWebhook(@Body() body: any, @Headers('x-paystack-signature') signature: string) {
-    const secret = this.configService.get<string>('PAYSTACK_SECRET_KEY');
+    const secret = this.configService.get<string>('PAYSTACK_SECRET_KEY') as string;
     const hash = crypto.createHmac('sha512', secret).update(JSON.stringify(body)).digest('hex');
 
     await this.logRepository.create({

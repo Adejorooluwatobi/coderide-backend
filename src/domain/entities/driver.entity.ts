@@ -2,6 +2,7 @@ import { BaseEntity } from "./base.entity";
 import { Chat } from "./chat.entity";
 import { User } from "./user.entity";
 import { Vehicle } from "./vehicle.entity";
+import { VehicleAssignment } from "./vehicle-assignment.entity";
 import { Ride } from "./ride.entity";
 import { DocumentStatus } from "../enums/document-status.enum";
 import { ApiProperty } from "@nestjs/swagger";
@@ -52,6 +53,9 @@ export class Driver extends BaseEntity {
 
     @ApiProperty({ type: () => [Vehicle] })
     assignedVehicles?: Vehicle[];
+
+    @ApiProperty({ type: () => [VehicleAssignment] })
+    vehicleAssignments?: VehicleAssignment[];
 
     @ApiProperty({ type: () => [Ride] })
     rides?: Ride[];

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { DriverController } from '../controllers/driver.controller';
 import { DriverService } from '../../domain/services/driver.service';
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
@@ -6,7 +6,7 @@ import { PrismaDriverRepository } from 'src/infrastructure/persistence/prisma/re
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, forwardRef(() => AuthModule)],
   controllers: [DriverController],
   providers: [
     DriverService,
