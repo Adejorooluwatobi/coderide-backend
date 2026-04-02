@@ -32,8 +32,8 @@ export class CreateNotificationDto {
 
   @ApiProperty()
   @IsBoolean()
-  @IsNotEmpty()
-  isRead: boolean;
+  @IsOptional()
+  isRead?: boolean;
 
   @ApiProperty()
   @IsOptional()

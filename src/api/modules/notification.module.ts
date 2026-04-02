@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { NotificationController } from '../controllers/notification.controller';
 import { NotificationService } from '../../domain/services/notification.service';
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
@@ -7,7 +7,7 @@ import { AuthModule } from '../auth/auth.module';
 import { AppGateway } from 'src/shared/websockets/app.gateway';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, forwardRef(() => AuthModule)],
   controllers: [NotificationController],
   providers: [
     NotificationService,

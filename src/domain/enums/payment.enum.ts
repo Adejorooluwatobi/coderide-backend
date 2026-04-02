@@ -15,3 +15,9 @@ export enum PaymentStatus {
     FAILED = 'FAILED',
     REFUNDED = 'REFUNDED',
 }
+
+export enum PaymentGateway {
+    PAYSTACK = 'PAYSTACK',
+    FLUTTERWAVE = 'FLUTTERWAVE',
+    STRIPE = 'STRIPE',
+}

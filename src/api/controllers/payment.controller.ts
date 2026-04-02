@@ -1,13 +1,43 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, ValidationPipe, NotFoundException, Query } from '@nestjs/common';
 import { PaymentService } from '../../domain/services/payment.service';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { CreatePaymentDto } from 'src/application/DTO/payment/create-payment.dto';
 import { UpdatePaymentDto } from 'src/application/DTO/payment/update-payment.dto';
 import { Payment } from 'src/domain/entities/payment.entity';
+import { PaymentGateway } from 'src/domain/enums/payment.enum';
 
+@ApiTags('Payments')
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
+
+  @Post('initialize')
+  @ApiOperation({ summary: 'Initialize a payment' })
+  @ApiQuery({ name: 'gateway', enum: PaymentGateway, required: false })
+  async initializePayment(
+    @Body() data: { userId: string; email: string; amount: number; rideId: string },
+    @Query('gateway') gateway: PaymentGateway = PaymentGateway.PAYSTACK
+  ) {
+    const result = await this.paymentService.initializePayment(data.userId, data.email, data.amount, data.rideId, gateway);
+    return { succeeded: true, message: 'Payment initialized successfully', resultData: result };
+  }
+
+  @Get('verify/:reference')
+  @ApiOperation({ summary: 'Verify a payment' })
+  @ApiQuery({ name: 'gateway', enum: PaymentGateway, required: false })
+  async verifyPayment(
+    @Param('reference') reference: string,
+    @Query('gateway') gateway: PaymentGateway = PaymentGateway.PAYSTACK
+  ) {
+    // Note: 'reference' is the Paystack reference or Flutterwave transaction ID
+    let result;
+    if (gateway === PaymentGateway.FLUTTERWAVE) {
+      result = await this.paymentService.verifyFlutterwavePayment(reference);
+    } else {
+      result = await this.paymentService.verifyPaystackPayment(reference);
+    }
+    return { succeeded: true, message: 'Payment verification processed', resultData: result };
+  }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get payment by ID' })

@@ -40,6 +40,12 @@ export class User extends BaseEntity {
     isVerified: boolean;
 
     @ApiProperty()
+    isOnline: boolean;
+
+    @ApiProperty()
+    lastSeen?: Date;
+
+    @ApiProperty()
     deletedAt?: Date;
 
     @ApiProperty({ type: () => Rider })

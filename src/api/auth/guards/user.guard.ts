@@ -25,19 +25,23 @@ export class UserGuard implements CanActivate {
     
     try {
       const secret = this.configService.get('JWT_SECRET') || 'your_super_secret_jwt_key_change_in_production';
-      // console.log(`UserGuard: Using secret: ${secret.substring(0, 5)}...`);
       const payload = this.jwtService.verify(token, { secret });
-      console.log(`UserGuard: Payload verified: ${JSON.stringify(payload)}`);
-      // Assign user to request object
       request.user = payload;
-      // Allow access if user is RIDER or DRIVER
+      
       const isAllowed = payload.role === 'RIDER' || payload.role === 'DRIVER';
       if (!isAllowed) {
         console.log(`UserGuard: Access denied for role ${payload.role}. Expected RIDER or DRIVER.`);
       }
       return isAllowed;
     } catch (err) {
-      console.log(`UserGuard: Verification failed for token ${token.substring(0, 10)}...: ${err.message}`);
+      const decoded = this.jwtService.decode(token) as any;
+      const now = Math.floor(Date.now() / 1000);
+      console.log(`UserGuard: Verification failed: ${err.message}`);
+      if (decoded && decoded.exp) {
+        console.log(`UserGuard: Token expired at: ${new Date(decoded.exp * 1000).toISOString()}`);
+        console.log(`UserGuard: Current server time: ${new Date().toISOString()}`);
+        console.log(`UserGuard: Token age (sec): ${now - decoded.iat}`);
+      }
       return false;
     }
   }

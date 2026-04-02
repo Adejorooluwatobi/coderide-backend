@@ -7,6 +7,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
 import { UserModule } from '../modules/user.module';
 import { AdminModule } from '../modules/admin.module';
+import { WalletModule } from '../modules/wallet.module';
 
 
 @Module({
@@ -14,6 +15,7 @@ import { AdminModule } from '../modules/admin.module';
     ConfigModule.forRoot(),
     UserModule,
     forwardRef(() => AdminModule),
+    forwardRef(() => WalletModule),
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

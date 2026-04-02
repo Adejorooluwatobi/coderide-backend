@@ -1,7 +1,7 @@
 import { BaseEntity } from "./base.entity";
 import { User } from "./user.entity";
 import { Rider } from "./rider.entity";
-import { PaymentMethodType } from "../enums/payment.enum";
+import { PaymentGateway, PaymentMethodType } from "../enums/payment.enum";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class PaymentMethod extends BaseEntity {
@@ -15,6 +15,9 @@ export class PaymentMethod extends BaseEntity {
     type: PaymentMethodType;
 
     @ApiProperty()
+    cardFirst6?: string;
+
+    @ApiProperty()
     cardLast4?: string;
 
     @ApiProperty()
@@ -24,7 +27,10 @@ export class PaymentMethod extends BaseEntity {
     isDefault: boolean;
 
     @ApiProperty()
-    paymentGatewayToken: string;
+    paymentGateway: PaymentGateway;
+
+    @ApiProperty()
+    paymentGatewayToken?: string;
 
     @ApiProperty({ type: () => Rider })
     defaultForRider?: Rider;

@@ -1,6 +1,8 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import type { IPaymentGatewayLogRepository } from 'src/domain/repositories/payment-gateway-log.repository.interface';
+import { PaymentGateway } from 'src/domain/enums/payment.enum';
 
 @Injectable()
 export class PaystackService {
@@ -8,7 +10,11 @@ export class PaystackService {
   private readonly baseUrl = 'https://api.paystack.co';
   private readonly secretKey: string;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    @Inject('IPaymentGatewayLogRepository')
+    private readonly logRepository: IPaymentGatewayLogRepository,
+  ) {
     const key = this.configService.get<string>('PAYSTACK_SECRET_KEY');
     const isProd = this.configService.get('NODE_ENV') === 'production';
 
@@ -30,39 +36,62 @@ export class PaystackService {
     };
   }
 
+  private async log(endpoint: string, request: any, response: any, status?: number, ref?: string) {
+    try {
+      await this.logRepository.create({
+        gateway: PaymentGateway.PAYSTACK,
+        endpoint,
+        requestBody: request,
+        responseBody: response,
+        statusCode: status,
+        transactionRef: ref,
+      });
+    } catch (e) {
+      this.logger.error('Failed to save gateway log', e);
+    }
+  }
+
   async initializeTransaction(email: string, amount: number, metadata?: any) {
+    const endpoint = `${this.baseUrl}/transaction/initialize`;
+    const payload = {
+      email,
+      amount: amount * 100, // Convert to kobo
+      currency: 'NGN',
+      metadata,
+    };
+
     try {
       this.logger.log(`Initializing Paystack transaction for ${email} with amount ${amount}`);
       
       const response = await axios.post(
-        `${this.baseUrl}/transaction/initialize`,
-        {
-          email,
-          amount: amount * 100, // Convert to kobo
-          currency: 'NGN',
-          metadata,
-        },
+        endpoint,
+        payload,
         { headers: this.getHeaders() }
       );
 
+      await this.log(endpoint, payload, response.data, response.status, response.data?.data?.reference);
       return response.data;
     } catch (error) {
+      await this.log(endpoint, payload, error.response?.data, error.response?.status);
       this.logger.error('Paystack initialization error:', error.response?.data || error.message);
       throw new BadRequestException('Failed to initialize payment');
     }
   }
 
   async verifyTransaction(reference: string) {
+    const endpoint = `${this.baseUrl}/transaction/verify/${reference}`;
     try {
       this.logger.log(`Verifying Paystack transaction: ${reference}`);
       
       const response = await axios.get(
-        `${this.baseUrl}/transaction/verify/${reference}`,
+        endpoint,
         { headers: this.getHeaders() }
       );
 
+      await this.log(endpoint, { reference }, response.data, response.status, reference);
       return response.data;
     } catch (error) {
+      await this.log(endpoint, { reference }, error.response?.data, error.response?.status, reference);
       this.logger.error('Paystack verification error:', error.response?.data || error.message);
       throw new BadRequestException('Failed to verify payment');
     }

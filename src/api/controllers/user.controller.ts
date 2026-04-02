@@ -15,7 +15,7 @@ export class UserController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
-  @ApiResponse({ status: 200, description: 'User retrieved successfully', type: UserMapper })
+  @ApiResponse({ status: 200, description: 'User retrieved successfully', type: SecureUserResponseDto })
   async getUserId(@Param('id') userId: string) {
     const user = await this.userService.findById(userId);
     // CORRECTED: Throw NotFoundException (404) for missing resources
@@ -72,7 +72,7 @@ export class UserController {
 
   @Get('email/:email')
   @ApiOperation({ summary: 'Get user by email' })
-  @ApiResponse({ status: 200, description: 'User retrieved successfully', type: UserMapper })
+  @ApiResponse({ status: 200, description: 'User retrieved successfully', type: SecureUserResponseDto })
   async getUserByEmail(@Param('email') email: string) { 
     const user = await this.userService.findByEmail(email);
     // CORRECTED: Throw NotFoundException (404)

@@ -5,7 +5,7 @@ import {
   IsBoolean,
   IsOptional,
 } from 'class-validator';
-import { PaymentMethodType } from 'src/domain/enums/payment.enum';
+import { PaymentGateway, PaymentMethodType } from 'src/domain/enums/payment.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePaymentMethodDto {
@@ -19,6 +19,11 @@ export class CreatePaymentMethodDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  cardFirst6?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   cardLast4?: string;
 
   @ApiProperty({ required: false })
@@ -27,7 +32,12 @@ export class CreatePaymentMethodDto {
   cardBrand?: string;
 
   @ApiProperty()
-  @IsString()
+  @IsEnum(PaymentGateway)
   @IsNotEmpty()
-  paymentGatewayToken: string;
+  paymentGateway: PaymentGateway;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  paymentGatewayToken?: string;
 }

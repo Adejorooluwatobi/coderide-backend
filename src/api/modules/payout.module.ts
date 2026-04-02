@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PayoutService } from '../../domain/services/payout.service';
 import { PrismaModule } from 'src/infrastructure/persistence/prisma/prisma.module';
 import { PrismaPayoutRepository } from 'src/infrastructure/persistence/prisma/repositories/prisma.payout.repository';
@@ -9,7 +9,7 @@ import { PayoutController } from '../controllers/payout.controller';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, PaymentModule, EarningModule, DriverModule, AuthModule],
+  imports: [PrismaModule, forwardRef(() => PaymentModule), EarningModule, DriverModule, forwardRef(() => AuthModule)],
   controllers: [PayoutController],
   providers: [
     PayoutService,

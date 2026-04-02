@@ -30,6 +30,7 @@ export class PrismaPaymentMethodRepository implements IPaymentMethodRepository {
       data: {
         userId: params.userId,
         type: params.type as unknown as PrismaPaymentMethodType,
+        paymentGateway: params.paymentGateway,
         paymentGatewayToken: params.paymentGatewayToken,
         cardLast4: params.cardLast4,
         cardBrand: params.cardBrand,

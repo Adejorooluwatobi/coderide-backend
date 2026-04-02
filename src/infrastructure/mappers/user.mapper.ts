@@ -25,6 +25,8 @@ export class UserMapper {
       userType: prismaUser.userType as UserType,
       isActive: prismaUser.isActive,
       isVerified: prismaUser.isVerified,
+      isOnline: prismaUser.isOnline,
+      lastSeen: prismaUser.lastSeen ?? undefined,
       deletedAt: prismaUser.deletedAt ?? undefined,
       createdAt: prismaUser.createdAt,
       updatedAt: prismaUser.updatedAt,
@@ -51,6 +53,8 @@ export class UserMapper {
       userType: user.userType as UserType,
       isActive: user.isActive,
       isVerified: user.isVerified,
+      isOnline: user.isOnline,
+      lastSeen: user.lastSeen ?? null,
       deletedAt: user.deletedAt ?? null,
     };
   }
@@ -66,6 +70,8 @@ export class UserMapper {
       userType: user.userType,
       isActive: user.isActive,
       isVerified: user.isVerified,
+      isOnline: user.isOnline,
+      lastSeen: user.lastSeen,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       rider: user.rider,

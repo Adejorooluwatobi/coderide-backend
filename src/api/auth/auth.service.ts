@@ -6,6 +6,7 @@ import { CreateAdminDto } from 'src/application/DTO/admin/create-admin.dto';
 import { CreateUserDto } from 'src/application/DTO/user/create-user.dto';
 import { AdminService } from 'src/domain/services/admin.service';
 import { UserService } from 'src/domain/services/user.service';
+import { WalletService } from 'src/domain/services/wallet.service';
 import { AdminStatus } from 'src/domain/enums/admin-status.enum';
 
 interface AuthResponse {
@@ -24,6 +25,7 @@ export class AuthService {
     private jwtService: JwtService,
     private userService: UserService,
     private adminService: AdminService,
+    private walletService: WalletService,
   ) {
     const secret = this.configService.get<string>('JWT_SECRET');
     const isProd = this.configService.get('NODE_ENV') === 'production';
@@ -58,12 +60,15 @@ export class AuthService {
     if (existingUser) {
       throw new BadRequestException('User already exists');
     }
-    const hashedPassword = await this.hashPassword(userData.password);
-    await this.userService.create({
+    // const hashedPassword = await this.hashPassword(userData.password);
+    const user = await this.userService.create({
       ...userData,
-      password: hashedPassword,
+      password: userData.password,
       isActive: true
     });
+
+    // Create wallet for the new user (Rider or Driver)
+    await this.walletService.createWallet(user.id);
   }
   async loginUser(email: string, password: string): Promise<AuthResponse> {
     try {
@@ -88,8 +93,9 @@ export class AuthService {
       const payload = { sub: user.id, email: user.email, role: user.userType };
       const accessToken = this.jwtService.sign(payload);
 
-      // Automate isActive = true on login
+      // Automate isActive = true and isOnline = true on login
       await this.userService.updateStatus(user.id, true);
+      await this.userService.updateOnlineStatus(user.id, true);
 
       return {
         access_token: accessToken,
@@ -106,10 +112,10 @@ export class AuthService {
     if (existingAdmin) {
       throw new BadRequestException('Admin already exists');
     }
-    const hashedPassword = await this.hashPassword(adminData.password);
+    // const hashedPassword = await this.hashPassword(adminData.password);
     await this.adminService.create({
       username: adminData.username,
-      password: hashedPassword,
+      password: adminData.password,
       permissions: adminData.permissions
     });
   }
@@ -148,7 +154,7 @@ export class AuthService {
 
   async logoutUser(userId: string): Promise<void> {
     this.logger.log(`Logging out user: ${userId}`);
-    await this.userService.updateStatus(userId, false);
+    await this.userService.updateOnlineStatus(userId, false);
   }
 
   async logoutAdmin(adminId: string): Promise<void> {

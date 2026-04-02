@@ -10,7 +10,7 @@ export class Admin extends BaseEntity {
     @ApiProperty()
     username: string;
 
-    @ApiProperty()
+    // @ApiProperty()
     password: string;
     
     // Stores the sum of all permissions (e.g., 32 + 4 = 36)

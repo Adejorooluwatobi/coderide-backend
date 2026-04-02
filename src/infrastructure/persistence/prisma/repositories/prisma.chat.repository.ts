@@ -27,6 +27,22 @@ export class PrismaChatRepository implements IChatRepository {
     return chat ? ChatMapper.toDomain(chat) : null;
   }
 
+  async findByRiderId(riderId: string): Promise<Chat[]> {
+    const chats = await this.prisma.chat.findMany({
+      where: { riderId },
+      include: { messages: true, rider: true, driver: true, admin: true },
+    });
+    return chats.map((c) => ChatMapper.toDomain(c));
+  }
+
+  async findByDriverId(driverId: string): Promise<Chat[]> {
+    const chats = await this.prisma.chat.findMany({
+      where: { driverId },
+      include: { messages: true, rider: true, driver: true, admin: true },
+    });
+    return chats.map((c) => ChatMapper.toDomain(c));
+  }
+
   async findByParticipants(riderId?: string, driverId?: string, adminId?: string): Promise<Chat | null> {
     const chat = await this.prisma.chat.findFirst({
       where: {
@@ -53,19 +69,28 @@ export class PrismaChatRepository implements IChatRepository {
   }
 
   async addMessage(chatId: string, params: CreateChatMessageParams): Promise<ChatMessage> {
-    if (!params.message) {
-      throw new Error('Message content is required');
-    }
-
     const chatMessage = await this.prisma.chatMessage.create({
       data: {
         chatId,
-        senderUserId: params.senderUserId,
-        senderAdminId: params.senderAdminId,
-        message: params.message,
+        senderUserId: params.senderUserId || null,
+        senderAdminId: params.senderAdminId || null,
+        message: params.message || null,
+        type: params.type || 'TEXT',
+        attachmentUrl: params.attachmentUrl || null,
+        mimeType: params.mimeType || null,
+        fileSize: params.fileSize || null,
+        duration: params.duration || null,
         isRead: false,
+        isDelivered: false,
       },
     });
+
+    // Update lastMessageAt in Chat
+    await this.prisma.chat.update({
+      where: { id: chatId },
+      data: { lastMessageAt: new Date() },
+    });
+
     return ChatMapper.toMessageDomain(chatMessage);
   }
 

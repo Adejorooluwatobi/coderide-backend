@@ -3,10 +3,13 @@ import { Payment } from '../entities/payment.entity';
 import type { IPaymentRepository } from '../repositories/payment.repository.interface';
 import { CreatePaymentParams, UpdatePaymentParams } from 'src/utils/type';
 import { PaystackService } from 'src/infrastructure/external-services/paystack.service';
+import { FlutterwaveService } from 'src/infrastructure/external-services/flutterwave.service';
 import { NotificationService } from './notification.service';
 import { RideGateway } from 'src/shared/websockets/ride.gateway';
 import { RideService } from './ride.service';
+import { WalletService } from './wallet.service';
 import { NotificationType } from '../enums/notification.enum';
+import { PaymentGateway, PaymentStatus } from '../enums/payment.enum';
 
 @Injectable()
 export class PaymentService {
@@ -15,9 +18,11 @@ export class PaymentService {
     @Inject('IPaymentRepository')
     private readonly paymentRepository: IPaymentRepository,
     private readonly paystackService: PaystackService,
+    private readonly flutterwaveService: FlutterwaveService,
     private readonly notificationService: NotificationService,
     private readonly rideGateway: RideGateway,
     private readonly rideService: RideService,
+    private readonly walletService: WalletService,
   ) {}
 
   async findById(id: string): Promise<Payment | null> { 
@@ -62,9 +67,82 @@ export class PaymentService {
     return this.paymentRepository.create(payment);
   }
 
-  async initializePayment(userId: string, email: string, amount: number, rideId: string) {
-    this.logger.log(`Initializing payment for ride ${rideId}`);
+  async initializePayment(userId: string, email: string, amount: number, rideId: string, gateway: PaymentGateway = PaymentGateway.PAYSTACK) {
+    this.logger.log(`Initializing ${gateway} payment for ride ${rideId}`);
+    
+    if (gateway === PaymentGateway.FLUTTERWAVE) {
+      const tx_ref = `code-ride-${rideId}-${Date.now()}`;
+      return this.flutterwaveService.initializeTransaction(email, amount, tx_ref, { rideId, userId });
+    }
+
+    // Default to Paystack
     return this.paystackService.initializeTransaction(email, amount * 100); // Paystack expects kobo
+  }
+
+  async payViaWallet(userId: string, rideId: string, amount: number) {
+    const ride = await this.rideService.findById(rideId);
+    if (!ride) throw new Error('Ride not found');
+    if (!ride.driverId) throw new Error('Ride has no driver assigned');
+
+    const driver = await this.rideService.findByDriverId(ride.driverId);
+    // Note: I need to know the vehicle ownership. 
+    // Usually a driver has an active vehicle assignment.
+    // For now, let's look at the first vehicle assignment if available.
+    
+    // Using a default of DRIVER_OWNED if not found
+    const ownershipType = ride.driver?.vehicleAssignments?.[0]?.vehicle?.ownershipType || 'DRIVER_OWNED';
+
+    await this.walletService.processRidePayment(
+      rideId,
+      amount,
+      ride.riderId,
+      ride.driverId,
+      ownershipType as any
+    );
+
+    // Update payment status in DB
+    const existingPayment = await this.findByRideId(rideId);
+    if (existingPayment) {
+        await this.update(existingPayment.id, { paymentStatus: PaymentStatus.COMPLETED, paidAt: new Date() });
+    } else {
+        await this.create({
+            rideId,
+            riderId: ride.riderId,
+            amount,
+            paymentMethod: 'WALLET' as any,
+            paymentStatus: PaymentStatus.COMPLETED,
+            paidAt: new Date(),
+        } as any);
+    }
+
+    return { success: true, message: 'Payment successful via wallet' };
+  }
+
+  async verifyPaystackPayment(reference: string) {
+    this.logger.log(`Verifying Paystack payment: ${reference}`);
+    const result = await this.paystackService.verifyTransaction(reference);
+    
+    if (result.status && result.data.status === 'success') {
+      const payment = await this.findByTransactionReference(reference);
+      if (payment && payment.paymentStatus !== PaymentStatus.COMPLETED) {
+        await this.update(payment.id, { paymentStatus: PaymentStatus.COMPLETED });
+      }
+    }
+    return result;
+  }
+
+  async verifyFlutterwavePayment(transactionId: string) {
+    this.logger.log(`Verifying Flutterwave payment: ${transactionId}`);
+    const result = await this.flutterwaveService.verifyTransaction(transactionId);
+    
+    if (result.status === 'success' && result.data.status === 'successful') {
+      const tx_ref = result.data.tx_ref;
+      const payment = await this.findByTransactionReference(tx_ref);
+      if (payment && payment.paymentStatus !== PaymentStatus.COMPLETED) {
+        await this.update(payment.id, { paymentStatus: PaymentStatus.COMPLETED });
+      }
+    }
+    return result;
   }
 
   async update(id: string, payment: Partial<UpdatePaymentParams>): Promise<Payment> {

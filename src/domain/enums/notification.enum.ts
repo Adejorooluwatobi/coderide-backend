@@ -4,4 +4,7 @@ export enum NotificationType {
     PAYMENT = 'PAYMENT',
     PROMO = 'PROMO',
     SYSTEM = 'SYSTEM',
+    CHAT_MESSAGE = 'CHAT_MESSAGE',
+    WALLET_FUNDED = 'WALLET_FUNDED',
+    WITHDRAWAL_UPDATE = 'WITHDRAWAL_UPDATE',
 }
