@@ -69,19 +69,28 @@ export class PrismaChatRepository implements IChatRepository {
   }
 
   async addMessage(chatId: string, params: CreateChatMessageParams): Promise<ChatMessage> {
-    if (!params.message) {
-      throw new Error('Message content is required');
-    }
-
     const chatMessage = await this.prisma.chatMessage.create({
       data: {
         chatId,
-        senderUserId: params.senderUserId,
-        senderAdminId: params.senderAdminId,
-        message: params.message,
+        senderUserId: params.senderUserId || null,
+        senderAdminId: params.senderAdminId || null,
+        message: params.message || null,
+        type: params.type || 'TEXT',
+        attachmentUrl: params.attachmentUrl || null,
+        mimeType: params.mimeType || null,
+        fileSize: params.fileSize || null,
+        duration: params.duration || null,
         isRead: false,
+        isDelivered: false,
       },
     });
+
+    // Update lastMessageAt in Chat
+    await this.prisma.chat.update({
+      where: { id: chatId },
+      data: { lastMessageAt: new Date() },
+    });
+
     return ChatMapper.toMessageDomain(chatMessage);
   }
 

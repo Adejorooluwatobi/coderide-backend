@@ -9,7 +9,10 @@ export interface IChatRepository {
     findByDriverId(driverId: string): Promise<Chat[]>;
     findByParticipants(riderId?: string, driverId?: string, adminId?: string): Promise<Chat | null>;
     create(params: CreateChatParams): Promise<Chat>;
-    addMessage(chatId: string, params: CreateChatMessageParams): Promise<ChatMessage>;
+    addMessage(
+        chatId: string, 
+        params: CreateChatMessageParams
+    ): Promise<ChatMessage>;
     getMessages(chatId: string): Promise<ChatMessage[]>;
     markMessagesAsRead(chatId: string, userId?: string, adminId?: string): Promise<void>;
 }

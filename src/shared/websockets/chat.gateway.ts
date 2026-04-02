@@ -2,15 +2,16 @@ import {
   WebSocketGateway,
   WebSocketServer,
   SubscribeMessage,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   MessageBody,
   ConnectedSocket,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Logger, UseGuards, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ChatService } from 'src/domain/services/chat.service';
+import { AppGateway } from './app.gateway';
 
 @WebSocketGateway({
   cors: {
@@ -23,95 +24,194 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   private readonly logger = new Logger(ChatGateway.name);
-  private connectedUsers = new Map<string, { userId: string; isAdmin: boolean }>(); // socketId -> info
-  private userSockets = new Map<string, string>(); // userId -> socketId
 
   constructor(
     private jwtService: JwtService,
+    @Inject(forwardRef(() => ChatService))
     private chatService: ChatService,
+    @Inject(forwardRef(() => AppGateway))
+    private appGateway: AppGateway,
   ) {}
 
   async handleConnection(client: Socket) {
-    try {
-      const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        this.logger.warn(`Client ${client.id} attempted to connect without token`);
-        client.disconnect();
-        return;
-      }
-
-      const payload = this.jwtService.verify(token);
-      const userId = payload.sub;
-      const isAdmin = payload.role === 'ADMIN';
-
-      this.connectedUsers.set(client.id, { userId, isAdmin });
-      this.userSockets.set(userId, client.id);
-      
-      client.join(`user:${userId}`);
-      if (isAdmin) {
-        client.join('admins');
-      }
-      
-      this.logger.log(`${isAdmin ? 'Admin' : 'User'} ${userId} connected with socket ${client.id}`);
-    } catch (error) {
-      this.logger.error(`WebSocket connection error for client ${client.id}:`, error.message);
-      client.disconnect();
-    }
+    // Connection is primarily handled by AppGateway, 
+    // but we can add namespace-specific logic here if needed.
+    this.logger.log(`Client ${client.id} connected to /chat namespace`);
   }
 
   handleDisconnect(client: Socket) {
-    const info = this.connectedUsers.get(client.id);
-    if (info) {
-      this.connectedUsers.delete(client.id);
-      this.userSockets.delete(info.userId);
-      this.logger.log(`User ${info.userId} disconnected`);
-    }
-  }
-
-  @SubscribeMessage('join-chat')
-  async handleJoinChat(
-    @MessageBody() data: { chatId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    const info = this.connectedUsers.get(client.id);
-    if (!info) return;
-
-    client.join(`chat:${data.chatId}`);
-    this.logger.log(`User ${info.userId} joined chat ${data.chatId}`);
+    this.logger.log(`Client ${client.id} disconnected from /chat namespace`);
   }
 
   @SubscribeMessage('send-message')
   async handleSendMessage(
-    @MessageBody() data: { chatId: string; message: string },
+    @MessageBody() data: { chatId: string; message: string; type?: any; attachments?: any[] },
     @ConnectedSocket() client: Socket,
   ) {
-    const info = this.connectedUsers.get(client.id);
-    if (!info) return;
+    const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
+    if (!token) return;
 
     try {
-      const message = await this.chatService.sendMessage(
-        data.chatId,
-        {
-          chatId: data.chatId,
-          message: data.message,
-          senderUserId: info.isAdmin ? undefined : info.userId,
-          senderAdminId: info.isAdmin ? info.userId : undefined,
-          senderId: info.userId,
-        },
-      );
+      const payload = this.jwtService.verify(token);
+      const userId = payload.sub;
+      const isAdmin = payload.role === 'ADMIN';
 
-      // Broadcast to room
-      this.server.to(`chat:${data.chatId}`).emit('new-message', message);
-      
-      // Also notify admins if they aren't in the room
-      this.server.to('admins').emit('admin-log-message', {
-          chatId: data.chatId,
-          message: message
+      const message = await this.chatService.sendMessage(data.chatId, {
+        chatId: data.chatId,
+        message: data.message,
+        type: data.type,
+        senderUserId: isAdmin ? undefined : userId,
+        senderAdminId: isAdmin ? userId : undefined,
+        senderId: userId,
+      });
+
+      // Get chat participants to notify
+      const chat = await this.chatService.findById(data.chatId);
+      if (!chat) return;
+
+      const recipientId = chat.riderId === userId ? chat.driverId : chat.riderId;
+
+      // Real-time delivery via AppGateway
+      if (recipientId) {
+        this.appGateway.sendToUser(recipientId, 'new-message', message);
+      }
+
+      // Confirmation to sender
+      client.emit('message-sent', message);
+
+      // Notify admins
+      this.appGateway.broadcastToAdmins('admin-log-message', {
+        chatId: data.chatId,
+        message: message,
       });
 
     } catch (error) {
       this.logger.error('Error sending message:', error);
+      client.emit('error', { message: 'Failed to send message' });
+    }
+  }
+
+  @SubscribeMessage('offer-call')
+  async handleOfferCall(
+    @MessageBody() data: { chatId: string; callType: 'VOICE' | 'VIDEO' },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
+    if (!token) return;
+
+    try {
+      const payload = this.jwtService.verify(token);
+      const callerId = payload.sub;
+      
+      const chat = await this.chatService.findById(data.chatId);
+      if (!chat) return;
+
+      const calleeId = chat.riderId === callerId ? chat.driverId : chat.riderId;
+      if (!calleeId) return;
+
+      // Check Busy Status
+      if (this.appGateway.isUserBusy(calleeId)) {
+        client.emit('call-busy', { userId: calleeId, message: 'User is on another call' });
+        return;
+      }
+
+      // Mark caller as busy
+      this.appGateway.setUserBusyStatus(callerId, true);
+
+      // Forward offer to callee
+      this.appGateway.sendToUser(calleeId, 'incoming-call', {
+        chatId: data.chatId,
+        callerId,
+        callerName: payload.name || 'User',
+        callType: data.callType,
+      });
+
+      this.logger.log(`Call offered from ${callerId} to ${calleeId}`);
+    } catch (error) {
+      this.logger.error('Error offering call:', error);
+    }
+  }
+
+  @SubscribeMessage('accept-call')
+  async handleAcceptCall(
+    @MessageBody() data: { chatId: string; callerId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
+    if (!token) return;
+
+    try {
+      const payload = this.jwtService.verify(token);
+      const calleeId = payload.sub;
+
+      // Mark callee as busy
+      this.appGateway.setUserBusyStatus(calleeId, true);
+
+      // Generate LiveKit tokens (actual implementation would call LiveKitService)
+      // For signaling, we just notify the caller
+      this.appGateway.sendToUser(data.callerId, 'call-accepted', {
+        chatId: data.chatId,
+        calleeId,
+      });
+
+      this.logger.log(`Call accepted by ${calleeId} from ${data.callerId}`);
+    } catch (error) {
+      this.logger.error('Error accepting call:', error);
+    }
+  }
+
+  @SubscribeMessage('reject-call')
+  async handleRejectCall(
+    @MessageBody() data: { chatId: string; callerId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
+    if (!token) return;
+
+    try {
+      const payload = this.jwtService.verify(token);
+      const calleeId = payload.sub;
+
+      // Notify caller
+      this.appGateway.sendToUser(data.callerId, 'call-rejected', {
+        chatId: data.chatId,
+        calleeId,
+      });
+
+      // Clear caller busy status
+      this.appGateway.setUserBusyStatus(data.callerId, false);
+
+      this.logger.log(`Call rejected by ${calleeId} from ${data.callerId}`);
+    } catch (error) {
+      this.logger.error('Error rejecting call:', error);
+    }
+  }
+
+  @SubscribeMessage('hangup-call')
+  async handleHangupCall(
+    @MessageBody() data: { chatId: string; otherId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
+    if (!token) return;
+
+    try {
+      const payload = this.jwtService.verify(token);
+      const userId = payload.sub;
+
+      // Clear busy status for both
+      this.appGateway.setUserBusyStatus(userId, false);
+      this.appGateway.setUserBusyStatus(data.otherId, false);
+
+      // Notify other party
+      this.appGateway.sendToUser(data.otherId, 'call-ended', {
+        chatId: data.chatId,
+        endedBy: userId,
+      });
+
+      this.logger.log(`Call hung up by ${userId} in chat ${data.chatId}`);
+    } catch (error) {
+      this.logger.error('Error hanging up call:', error);
     }
   }
 }

@@ -35,6 +35,15 @@ export class Chat extends BaseEntity {
     @ApiProperty({ enum: ChatType })
     type: ChatType;
 
+    @ApiProperty({ required: false })
+    activeCallId?: string;
+
+    @ApiProperty({ required: false })
+    activeCallStartedAt?: Date;
+
+    @ApiProperty({ required: false })
+    lastMessageAt?: Date;
+
     @ApiProperty({ type: () => [ChatMessage] })
     messages?: ChatMessage[];
 

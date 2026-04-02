@@ -643,9 +643,12 @@ model Chat {
   riderId   String?
   driverId  String?
   adminId   String?
-  type      ChatType      @default(RIDE)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  type                ChatType      @default(RIDE)
+  activeCallId        String?
+  activeCallStartedAt DateTime?
+  lastMessageAt       DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
   ride      Ride?         @relation(fields: [rideId], references: [id])
   rider     Rider?        @relation(fields: [riderId], references: [id])
   driver    Driver?       @relation(fields: [driverId], references: [id])
@@ -657,18 +660,36 @@ model Chat {
 }
 
 model ChatMessage {
-  id            String   @id @default(uuid())
+  id            String          @id @default(uuid())
   chatId        String
   senderUserId  String?
   senderAdminId String?
-  message       String
-  isRead        Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  chat          Chat     @relation(fields: [chatId], references: [id])
-  senderUser    User?    @relation(fields: [senderUserId], references: [id])
-  senderAdmin   Admin?   @relation(fields: [senderAdminId], references: [id])
+  message       String?
+  type          ChatMessageType @default(TEXT)
+  attachmentUrl String?
+  mimeType      String?
+  fileSize      Int?
+  duration      Int?
+  isRead        Boolean         @default(false)
+  isDelivered   Boolean         @default(false)
+  readAt        DateTime?
+  deliveredAt   DateTime?
+  createdAt     DateTime        @default(now())
+  chat          Chat            @relation(fields: [chatId], references: [id])
+  senderUser    User?           @relation(fields: [senderUserId], references: [id])
+  senderAdmin   Admin?          @relation(fields: [senderAdminId], references: [id])
 
   @@index([chatId, createdAt])
+}
+
+enum ChatMessageType {
+  TEXT
+  IMAGE
+  FILE
+  VOICE_NOTE
+  CALL_START
+  CALL_END
+  MISSED_CALL
 }
 
 enum ChatType {
