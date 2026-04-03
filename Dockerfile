@@ -7,7 +7,8 @@ RUN npm config set registry https://registry.npmjs.org/ && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm install
 COPY . .
-RUN npx prisma generate && npm run build && npm prune --production
+RUN npx prisma generate
+RUN npm run build && npm prune --production
 
 
 # Stage 2: Run the app
@@ -33,4 +34,4 @@ USER appuser
 
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "wget", "-q", "-O", "-", "http://localhost:3000/api/docs" ] || exit 1
-CMD ["node", "dist/main.js"]
+CMD ["npm", "run", "start:prod"]
